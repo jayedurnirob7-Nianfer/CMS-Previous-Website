@@ -27,18 +27,15 @@ function invalidateCache() {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
+  const forceFresh = searchParams.get('fresh') === 'true' || request.headers.get('cache-control') === 'no-cache';
 
   try {
     await dbConnect();
 
     if (action === 'getAllData') {
       const now = Date.now();
-      if (dataCache.data && (now - dataCache.timestamp < CACHE_TTL_MS)) {
-        return NextResponse.json(dataCache.data, {
-          headers: {
-            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-          }
-        });
+      if (!forceFresh && dataCache.data && (now - dataCache.timestamp < CACHE_TTL_MS)) {
+        return NextResponse.json(dataCache.data);
       }
 
       const clients = await Client.find({}).select('-__v').sort({ createdAt: -1 }).lean();
@@ -53,7 +50,7 @@ export async function GET(request) {
 
       return NextResponse.json(formattedClients, {
         headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'Cache-Control': 'no-store, max-age=0, must-revalidate',
         }
       });
     }
@@ -147,20 +144,54 @@ export async function POST(request) {
         const clientName = record['Client Name']?.trim();
         if (!clientName) continue;
 
-        const existing = await Client.findOne({ 'Client Name': clientName });
+        // Case-insensitive regex matching for Client Name
+        const escapedName = clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const existing = await Client.findOne({ 
+          'Client Name': { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+        });
+
         if (existing) {
           const updateData = {};
-          if (record['Client Website'] !== undefined) updateData['Client Website'] = record['Client Website'];
-          if (record['Our Domain']) updateData['Our Domain'] = record['Our Domain'];
-          if (record['Developer']) updateData['Developer'] = record['Developer'];
-          if (record['Status']) updateData['Status'] = record['Status'];
+          if (record['Client Website'] !== undefined && record['Client Website'] !== '') {
+            updateData['Client Website'] = record['Client Website'].trim();
+          }
+          if (record['Our Domain'] !== undefined && record['Our Domain'] !== '') {
+            updateData['Our Domain'] = record['Our Domain'].trim();
+          }
+          if (record['Developer'] !== undefined && record['Developer'] !== '') {
+            updateData['Developer'] = record['Developer'].trim();
+          }
+          if (record['Status'] !== undefined && record['Status'] !== '') {
+            updateData['Status'] = record['Status'].trim();
+          }
+          if (record['Deli_Last_Time'] !== undefined && record['Deli_Last_Time'] !== '') {
+            updateData['Deli_Last_Time'] = record['Deli_Last_Time'].trim();
+          }
+          if (record['Profile Name'] !== undefined && record['Profile Name'] !== '') {
+            updateData['Profile Name'] = record['Profile Name'].trim();
+          }
 
           if (Object.keys(updateData).length > 0) {
             await Client.updateOne({ _id: existing._id }, { $set: updateData });
             updatedCount++;
           }
         } else {
-          await Client.create(record);
+          let category = record['category'] || record['Type of website'] || 'Wordpress';
+          if (category.toLowerCase().includes('wix')) category = 'WIX';
+          else if (category.toLowerCase().includes('shopify')) category = 'Shopify';
+          else category = 'Wordpress';
+
+          await Client.create({
+            'Client Name': clientName,
+            category: category,
+            'Type of website': record['Type of website'] || category,
+            'Profile Name': record['Profile Name'] || '',
+            'Our Domain': record['Our Domain'] || '',
+            'Client Website': record['Client Website'] || '',
+            'Developer': record['Developer'] || '',
+            'Status': record['Status'] || 'Good',
+            'Deli_Last_Time': record['Deli_Last_Time'] || ''
+          });
           addedCount++;
         }
       }

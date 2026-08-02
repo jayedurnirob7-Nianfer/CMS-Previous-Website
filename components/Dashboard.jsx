@@ -195,26 +195,34 @@ export default function Dashboard() {
     }
   };
 
-  const fetchAllData = async (isSilent = false) => {
+  const fetchAllData = async (isSilent = false, forceFresh = false) => {
     if (!isSilent && allData.length === 0) setLoading(true);
+    // Safety net: never stay stuck in loading state longer than 30 seconds
+    const safetyTimer = setTimeout(() => setLoading(false), 30000);
     try {
-      const response = await fetch(`${API_URL}?action=getAllData`);
+      const url = forceFresh
+        ? `${API_URL}?action=getAllData&fresh=true&_t=${Date.now()}`
+        : `${API_URL}?action=getAllData`;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
       const result = await response.json();
       if (Array.isArray(result)) {
         setAllData(result);
-        localStorage.setItem('cms_cached_data', JSON.stringify(result));
-      } else {
-        setAllData([]);
+        try { localStorage.setItem('cms_cached_data', JSON.stringify(result)); } catch(e) {}
+      } else if (result.error) {
+        console.error('API error:', result.error);
       }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error('Error loading data:', error);
       if (!isSilent && allData.length === 0) {
-        alert(`Failed to load data. Error: ${error.message}`);
+        alert(`Failed to load data: ${error.message}`);
       }
     } finally {
+      clearTimeout(safetyTimer);
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -746,7 +754,7 @@ export default function Dashboard() {
               className={styles.loginButton} 
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               disabled={loading}
-              onClick={() => fetchAllData()}
+              onClick={() => fetchAllData(false, true)}
               title="Refresh data from server"
             >
               🔄 Refresh
@@ -1277,7 +1285,7 @@ export default function Dashboard() {
       {isCSVImportModalOpen && (
         <CSVImportModal 
           onClose={() => setIsCSVImportModalOpen(false)}
-          onImportSuccess={fetchAllData}
+          onImportSuccess={() => fetchAllData(false, true)}
           adminPassword={adminPassword}
         />
       )}
