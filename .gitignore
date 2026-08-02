@@ -3,6 +3,11 @@ node_modules
 .vscode
 .env
 .env.local
+service-account.json
+sheet1.json
+sheet2.json
+scratch/
+extracted_clients.txt
 out
 build
 dist

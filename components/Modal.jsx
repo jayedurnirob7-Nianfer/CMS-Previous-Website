@@ -14,7 +14,8 @@ export default function Modal({ onClose, onSubmit, initialData, activeTab, avail
     'Tags': initialData ? initialData['Tags'] || '' : '',
     'Status': initialData ? initialData['Status'] || '' : '',
     'Team Name': initialData ? initialData['Team Name'] || '' : '',
-    'Developer': initialData ? initialData['Developer'] || '' : ''
+    'Developer': initialData ? initialData['Developer'] || '' : '',
+    'Deli_Last_Time': initialData ? initialData['Deli_Last_Time'] || '' : ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,6 +81,11 @@ export default function Modal({ onClose, onSubmit, initialData, activeTab, avail
           </div>
 
           <div className={styles.formGroup}>
+            <label className={styles.label}>Deli Last Time</label>
+            <input type="text" name="Deli_Last_Time" className={styles.input} value={formData['Deli_Last_Time']} onChange={handleChange} placeholder="e.g. 24 Hours / Delivery time" />
+          </div>
+
+          <div className={styles.formGroup}>
             <label className={styles.label}>Our Domain</label>
             <input type="url" name="Our Domain" className={styles.input} value={formData['Our Domain']} onChange={handleChange} placeholder="https://..." />
           </div>
@@ -87,11 +93,6 @@ export default function Modal({ onClose, onSubmit, initialData, activeTab, avail
           <div className={styles.formGroup}>
             <label className={styles.label}>Client Website</label>
             <input type="url" name="Client Website" className={styles.input} value={formData['Client Website']} onChange={handleChange} placeholder="https://..." />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Tags (comma separated)</label>
-            <input type="text" name="Tags" className={styles.input} value={formData['Tags']} onChange={handleChange} />
           </div>
 
           <div className={styles.formGroup}>

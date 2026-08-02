@@ -10,8 +10,9 @@ import SettingsModal from './SettingsModal';
 import ImportModal from './ImportModal';
 import IframeModal from './IframeModal';
 import ConfirmModal from './ConfirmModal';
+import CSVImportModal from './CSVImportModal';
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbzQTOF3LNIr3wOyvEzNvlUMXa3PeWQl80tHlwaqYnXf1rRF09BLAO8VydmmARi8XdxniA/exec';
+const API_URL = '/api/data';
 
 const CopyIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -33,6 +34,87 @@ const EditIcon = () => (
   </svg>
 );
 
+function PreviewThumbnail({ clientWebsite, ourDomain, onLivePreview }) {
+  const candidateUrls = useMemo(() => {
+    const list = [];
+    if (clientWebsite && String(clientWebsite).trim()) list.push(String(clientWebsite).trim());
+    if (ourDomain && String(ourDomain).trim()) list.push(String(ourDomain).trim());
+    return list;
+  }, [clientWebsite, ourDomain]);
+
+  const allProviders = useMemo(() => {
+    const providers = [];
+    candidateUrls.forEach(url => {
+      let formatted = url;
+      if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
+        formatted = 'https://' + formatted;
+      }
+      const encoded = encodeURIComponent(formatted);
+
+      providers.push({
+        src: `https://image.thum.io/get/width/600/crop/800/${formatted}`,
+        targetUrl: formatted,
+        name: 'Thum.io'
+      });
+      providers.push({
+        src: `https://s0.wp.com/mshots/v1/${encoded}?w=600&h=800`,
+        targetUrl: formatted,
+        name: 'WordPress mshots'
+      });
+      providers.push({
+        src: `https://api.microlink.io/?url=${encoded}&screenshot=true&meta=false&embed=screenshot.url`,
+        targetUrl: formatted,
+        name: 'Microlink'
+      });
+      providers.push({
+        src: `https://mini.s-shot.ru/1024x768/600/jpeg/?${encoded}`,
+        targetUrl: formatted,
+        name: 's-shot'
+      });
+    });
+    return providers;
+  }, [candidateUrls]);
+
+  const [providerIndex, setProviderIndex] = useState(0);
+
+  useEffect(() => {
+    setProviderIndex(0);
+  }, [candidateUrls]);
+
+  if (allProviders.length === 0 || providerIndex >= allProviders.length) {
+    return <div className={styles.noPreview}>No preview available</div>;
+  }
+
+  const currentProvider = allProviders[providerIndex];
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <img
+        src={currentProvider.src}
+        alt="Website Preview"
+        className={styles.internalPreviewImage}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+        onError={() => {
+          setProviderIndex(prev => prev + 1);
+        }}
+      />
+      <div 
+        className={styles.previewOverlay} 
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.2s' }} 
+        onMouseEnter={e => e.currentTarget.style.opacity = 1} 
+        onMouseLeave={e => e.currentTarget.style.opacity = 0}
+      >
+        <button 
+          onClick={(e) => { e.stopPropagation(); onLivePreview(currentProvider.targetUrl); }}
+          style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
+        >
+          👁️ Live Preview
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +122,8 @@ export default function Dashboard() {
   const [activeSearchTags, setActiveSearchTags] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -332,7 +416,7 @@ export default function Dashboard() {
       return;
     }
     
-    const headers = ['Client Name', 'Type of website', 'Profile Name', 'Developer', 'Status', 'Deadline Status', 'Client Website', 'Our Domain', 'Tags'];
+    const headers = ['Client Name', 'Type of website', 'Profile Name', 'Developer', 'Status', 'Deli_Last_Time', 'Client Website', 'Our Domain', 'Tags'];
     
     const csvRows = [];
     csvRows.push(headers.join(','));
@@ -640,39 +724,34 @@ export default function Dashboard() {
           </div>
 
           <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+            <button 
+              className={styles.loginButton} 
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              disabled={loading}
+              onClick={() => fetchAllData()}
+              title="Refresh data from server"
+            >
+              🔄 Refresh
+            </button>
             {isAdmin ? (
-              <>
-                <button 
-                  className={styles.loginButton} 
-                  style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  disabled={isImporting}
-                  onClick={() => {
-                    if (!kamSheetId) {
-                      alert("Please set your KAM Auto-Sync Sheet ID in the Admin Settings first!");
-                      setIsSettingsModalOpen(true);
-                    } else {
-                      handleImport(kamSheetId);
-                    }
-                  }}
-                >
-                  {isImporting ? (
-                    <>
-                      <div className={styles.spinner} style={{ width: '16px', height: '16px', borderWidth: '2px' }}></div>
-                      Importing...
-                    </>
-                  ) : (
-                    "Import From KAM"
-                  )}
-                </button>
-                <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
-              </>
+              <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
             ) : (
               <button className={styles.loginButton} onClick={() => setIsAuthModalOpen(true)}>Admin Login</button>
             )}
             {isAdmin && (
-              <button className={styles.exportButton} onClick={handleExportCSV} title="Export to CSV">
-                ⬇️ Export
-              </button>
+              <>
+                <button className={styles.exportButton} onClick={handleExportCSV} title="Export to CSV">
+                  ⬇️ Export
+                </button>
+                <button 
+                  className={styles.loginButton} 
+                  onClick={() => setIsCSVImportModalOpen(true)} 
+                  title="Import / Update links from CSV"
+                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                >
+                  ⬆️ Import CSV
+                </button>
+              </>
             )}
             <button className={styles.addButton} onClick={openAddModal}>
               + Add Website
@@ -862,7 +941,17 @@ export default function Dashboard() {
                 >
                   <div className={`${styles.cardContent} ${isExpanded ? styles.scrollableContent : ''}`}>
                     <div className={styles.cardHeader}>
-                      <h3 className={styles.clientName}>{clientName}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h3 className={styles.clientName}>{clientName}</h3>
+                        <button 
+                          className={styles.copyButton} 
+                          onClick={(e) => { e.stopPropagation(); handleCopyLink(clientName); }}
+                          title="Copy client name"
+                          style={{ padding: '0.25rem', borderRadius: '4px' }}
+                        >
+                          {copiedLink === clientName ? '✓' : <CopyIcon />}
+                        </button>
+                      </div>
                     </div>
                     
                     <div className={`${styles.details} ${group.length > 1 ? styles.detailsGrid : ''}`}>
@@ -875,28 +964,12 @@ export default function Dashboard() {
                         
                         return (
                           <div key={i} className={`${styles.websiteStackItem} ${needsWebsite ? styles.flashingWarning : ''}`}>
-                            <div className={styles.internalPreviewContainer} style={{ group: 'hover' }}>
-                              {previewUrl ? (
-                                <>
-                                  <Image 
-                                    src={previewUrl} 
-                                    alt="Website Preview" 
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    className={styles.internalPreviewImage}
-                                  />
-                                  <div className={styles.previewOverlay} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); setPreviewUrlModal(validUrl); }}
-                                      style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
-                                    >
-                                      👁️ Live Preview
-                                    </button>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className={styles.noPreview}>No preview available</div>
-                              )}
+                            <div className={styles.internalPreviewContainer}>
+                              <PreviewThumbnail 
+                                clientWebsite={item['Client Website']} 
+                                ourDomain={item['Our Domain']} 
+                                onLivePreview={(url) => setPreviewUrlModal(url)} 
+                              />
                             </div>
                             <div className={styles.stackItemHeader}>
                               <div className={styles.stackItemInfo}>
@@ -910,7 +983,10 @@ export default function Dashboard() {
                                 {item['Developer'] && (
                                   <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.3)' }}>DEV: {item['Developer']}</span>
                                 )}
-                                {item['Status'] && (
+                                {item['Deli_Last_Time'] && (
+                                  <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>🕒 {item['Deli_Last_Time']}</span>
+                                )}
+                                {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
                                   <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
                                     {item['Status']}
                                   </span>
@@ -994,24 +1070,6 @@ export default function Dashboard() {
                       );
                     })}
                     </div>
-
-                    {(() => {
-                      const allTags = Array.from(new Set(
-                        group.flatMap(item => 
-                          item['Tags'] ? item['Tags'].split(',').map(t => t.trim()).filter(Boolean) : []
-                        )
-                      ));
-                      
-                      if (allTags.length === 0) return null;
-                      
-                      return (
-                        <div className={styles.tagsContainer} style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                          {allTags.map((tag, i) => (
-                            <span key={i} className={styles.tag}>{tag}</span>
-                          ))}
-                        </div>
-                      );
-                    })()}
                   </div>
                 </motion.div>
               );
@@ -1076,7 +1134,17 @@ export default function Dashboard() {
                   className={styles.sidePanel}
                 >
                 <div className={styles.sidePanelHeader}>
-                  <h2 className={styles.sidePanelTitle}>{expandedCard}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h2 className={styles.sidePanelTitle}>{expandedCard}</h2>
+                    <button 
+                      className={styles.copyButton} 
+                      onClick={(e) => { e.stopPropagation(); handleCopyLink(expandedCard); }}
+                      title="Copy client name"
+                      style={{ padding: '0.35rem', borderRadius: '6px' }}
+                    >
+                      {copiedLink === expandedCard ? '✓' : <CopyIcon />}
+                    </button>
+                  </div>
                   <button className={styles.closeButton} onClick={() => setExpandedCard(null)}>
                     ✕
                   </button>
@@ -1088,25 +1156,13 @@ export default function Dashboard() {
                     
                     return (
                       <div key={i} className={styles.panelItem}>
-                        {previewUrl && (
                           <div className={styles.panelImageContainer}>
-                            <Image 
-                              src={previewUrl} 
-                              alt="Website Preview" 
-                              fill
-                              sizes="(max-width: 768px) 100vw, 400px"
-                              className={styles.panelImage}
+                            <PreviewThumbnail 
+                              clientWebsite={item['Client Website']} 
+                              ourDomain={item['Our Domain']} 
+                              onLivePreview={(url) => setPreviewUrlModal(url)} 
                             />
-                            <div className={styles.panelOverlay}>
-                              <button 
-                                onClick={() => setPreviewUrlModal(validUrl)}
-                                className={styles.panelPreviewBtn}
-                              >
-                                👁️ Live Preview
-                              </button>
-                            </div>
                           </div>
-                        )}
                         
                         <div className={styles.panelDetails}>
                           <div className={styles.panelBadges}>
@@ -1114,7 +1170,7 @@ export default function Dashboard() {
                             {item['Type of website'] && (
                               <span className={styles.type}>{item['Type of website']}</span>
                             )}
-                            {item['Status'] && (
+                            {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
                               <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
                                 {item['Status']}
                               </span>
@@ -1129,6 +1185,9 @@ export default function Dashboard() {
                           )}
                           {item['Developer'] && (
                             <div className={styles.panelRow}><strong>Dev:</strong> {item['Developer']}</div>
+                          )}
+                          {item['Deli_Last_Time'] && (
+                            <div className={styles.panelRow}><strong>Deli Last Time:</strong> {item['Deli_Last_Time']}</div>
                           )}
                           
                           <div className={styles.panelLinks}>
@@ -1159,12 +1218,6 @@ export default function Dashboard() {
                               </div>
                             )}
                           </div>
-                          
-                          {item['Tags'] && (
-                            <div className={styles.panelTags}>
-                              {item['Tags'].split(',').map((t, idx) => t.trim() ? <span key={idx} className={styles.tag}>{t.trim()}</span> : null)}
-                            </div>
-                          )}
                           
                           <div className={styles.panelActions}>
                             <button className={styles.editButtonPanel} onClick={() => openEditModal(item)}>
@@ -1202,6 +1255,14 @@ export default function Dashboard() {
         title="Delete Website"
         message="Are you sure you want to delete this website? This cannot be undone."
       />
+
+      {isCSVImportModalOpen && (
+        <CSVImportModal 
+          onClose={() => setIsCSVImportModalOpen(false)}
+          onImportSuccess={fetchAllData}
+          adminPassword={adminPassword}
+        />
+      )}
     </div>
   );
 }
