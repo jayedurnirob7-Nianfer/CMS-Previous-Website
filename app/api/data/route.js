@@ -12,6 +12,18 @@ let settings = {
   password: 'admin', // The default password, normally stored securely
 };
 
+// Server-side in-memory data cache
+let dataCache = {
+  data: null,
+  timestamp: 0,
+};
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+function invalidateCache() {
+  dataCache.data = null;
+  dataCache.timestamp = 0;
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
@@ -20,15 +32,30 @@ export async function GET(request) {
     await dbConnect();
 
     if (action === 'getAllData') {
-      const clients = await Client.find({}).sort({ createdAt: -1 }).lean();
+      const now = Date.now();
+      if (dataCache.data && (now - dataCache.timestamp < CACHE_TTL_MS)) {
+        return NextResponse.json(dataCache.data, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          }
+        });
+      }
+
+      const clients = await Client.find({}).select('-__v').sort({ createdAt: -1 }).lean();
       
-      // The frontend expects the `_id` to be mapped to `rowIndex` or similar so it can be updated
       const formattedClients = clients.map(client => ({
         ...client,
-        rowIndex: client._id.toString(), // Use _id as rowIndex to maintain compatibility
+        rowIndex: client._id.toString(),
       }));
       
-      return NextResponse.json(formattedClients);
+      dataCache.data = formattedClients;
+      dataCache.timestamp = now;
+
+      return NextResponse.json(formattedClients, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        }
+      });
     }
 
     if (action === 'getSettings') {
@@ -55,12 +82,14 @@ export async function POST(request) {
     if (action === 'create') {
       const newClient = new Client(body);
       await newClient.save();
+      invalidateCache();
       return NextResponse.json({ status: 'success', data: newClient });
     }
 
     if (action === 'update') {
       const { rowIndex, oldSheet, ...updateData } = body;
       await Client.findByIdAndUpdate(rowIndex, updateData);
+      invalidateCache();
       return NextResponse.json({ status: 'success' });
     }
 
@@ -70,6 +99,7 @@ export async function POST(request) {
         return NextResponse.json({ status: 'error', error: 'Invalid password' });
       }
       await Client.findByIdAndDelete(rowIndex);
+      invalidateCache();
       return NextResponse.json({ status: 'success' });
     }
 
@@ -135,6 +165,7 @@ export async function POST(request) {
         }
       }
 
+      invalidateCache();
       return NextResponse.json({ status: 'success', updatedCount, addedCount });
     }
 

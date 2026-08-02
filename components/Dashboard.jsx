@@ -151,8 +151,23 @@ export default function Dashboard() {
       setAdminPassword(savedPassword);
       setIsAdmin(true);
     }
+
+    // Instant 0ms load from localStorage cache
+    const cachedData = localStorage.getItem('cms_cached_data');
+    let hasCache = false;
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAllData(parsed);
+          setLoading(false);
+          hasCache = true;
+        }
+      } catch (e) {}
+    }
+
     fetchSettings();
-    fetchAllData(false); // Initial load (not silent)
+    fetchAllData(hasCache); // Silent fetch if cached data already rendered
 
     // Silent background polling every 60 seconds to avoid Google Apps Script rate limits
     const interval = setInterval(() => {
@@ -164,7 +179,7 @@ export default function Dashboard() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${API_URL}?action=getSettings&t=${Date.now()}`);
+      const response = await fetch(`${API_URL}?action=getSettings`);
       const result = await response.json();
       if (result.siteName) {
         setSiteName(result.siteName);
@@ -177,6 +192,27 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
+    }
+  };
+
+  const fetchAllData = async (isSilent = false) => {
+    if (!isSilent && allData.length === 0) setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}?action=getAllData`);
+      const result = await response.json();
+      if (Array.isArray(result)) {
+        setAllData(result);
+        localStorage.setItem('cms_cached_data', JSON.stringify(result));
+      } else {
+        setAllData([]);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      if (!isSilent && allData.length === 0) {
+        alert(`Failed to load data. Error: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -224,25 +260,7 @@ export default function Dashboard() {
     };
   }, []);
 
-  const fetchAllData = async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}?action=getAllData&t=${Date.now()}`);
-      const result = await response.json();
-      if (Array.isArray(result)) {
-        setAllData(result);
-      } else {
-        setAllData([]);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      if (!isSilent) {
-        alert(`Failed to load data. Error: ${error.message}`);
-      }
-    } finally {
-      if (!isSilent) setLoading(false);
-    }
-  };
+
 
   const handleAddData = async (newData) => {
     const payload = editingItem 

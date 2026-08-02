@@ -14,4 +14,8 @@ const ClientSchema = new mongoose.Schema({
   rowIndex: { type: Number },
 }, { timestamps: true });
 
+ClientSchema.index({ 'Client Name': 1 });
+ClientSchema.index({ createdAt: -1 });
+ClientSchema.index({ category: 1 });
+
 export default mongoose.models.Client || mongoose.model('Client', ClientSchema);
