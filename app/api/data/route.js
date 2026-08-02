@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/mongodb';
 import Client from '../../../models/Client';
 
+export const dynamic = 'force-dynamic';
+
 // Temporary in-memory settings since we don't have a settings model yet
 let settings = {
   siteName: 'CMS Dashboard',
