@@ -160,7 +160,7 @@ async function autoSync() {
     for (const doc of docs) {
       const existing = await ClientModel.findOne({ 'Client Name': doc['Client Name'] });
       if (existing) {
-        const { 'Client Website': _1, 'Our Domain': _2, 'Tags': _3, ...updateDoc } = doc;
+        const { 'Client Website': _1, 'Our Domain': _2, 'Tags': _3, 'Deli_Last_Time': _4, ...updateDoc } = doc;
         await ClientModel.updateOne({ _id: existing._id }, { $set: updateDoc });
         updatedCount++;
       } else {

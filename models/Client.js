@@ -11,11 +11,16 @@ const ClientSchema = new mongoose.Schema({
   'Status': { type: String, default: '' },
   'Team Name': { type: String, default: '' },
   'Developer': { type: String, default: '' },
+  'Deli_Last_Time': { type: String, default: '' },
   rowIndex: { type: Number },
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 ClientSchema.index({ 'Client Name': 1 });
 ClientSchema.index({ createdAt: -1 });
 ClientSchema.index({ category: 1 });
 
-export default mongoose.models.Client || mongoose.model('Client', ClientSchema);
+if (mongoose.models && mongoose.models.Client) {
+  delete mongoose.models.Client;
+}
+
+export default mongoose.model('Client', ClientSchema);

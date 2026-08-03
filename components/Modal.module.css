@@ -99,6 +99,22 @@
   color: #fff;
 }
 
+.switchButton {
+  background: none;
+  border: none;
+  color: var(--accent, #6366f1);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 0;
+  align-self: flex-end;
+  text-decoration: underline;
+  transition: opacity 0.2s;
+}
+
+.switchButton:hover {
+  opacity: 0.8;
+}
+
 .submitButton {
   margin-top: 1rem;
   background-color: var(--accent);

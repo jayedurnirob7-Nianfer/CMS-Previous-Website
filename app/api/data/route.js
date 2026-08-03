@@ -104,7 +104,7 @@ export async function POST(request) {
 
     if (action === 'update') {
       const { rowIndex, oldSheet, ...updateData } = body;
-      await Client.findByIdAndUpdate(rowIndex, updateData);
+      await Client.findByIdAndUpdate(rowIndex, { $set: updateData }, { new: true });
       invalidateCache();
       return NextResponse.json({ status: 'success' });
     }

@@ -3,7 +3,15 @@
 import React, { useState } from 'react';
 import styles from './Modal.module.css';
 
-export default function Modal({ onClose, onSubmit, initialData, activeTab, availableProfiles = [] }) {
+export default function Modal({
+  onClose,
+  onSubmit,
+  initialData,
+  activeTab,
+  availableProfiles = [],
+  availableTeams = [],
+  availableDevelopers = []
+}) {
   const [formData, setFormData] = useState({
     'sheet': initialData ? (initialData.category || initialData['sheet'] || 'Wordpress') : ((activeTab && activeTab !== 'All') ? activeTab : 'Wordpress'),
     'Profile Name': initialData ? initialData['Profile Name'] || '' : '',
@@ -19,10 +27,52 @@ export default function Modal({ onClose, onSubmit, initialData, activeTab, avail
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCustomTeam, setIsCustomTeam] = useState(false);
+  const [isCustomDeveloper, setIsCustomDeveloper] = useState(false);
+
+  // Derive unique combined team options including initial team if custom
+  const teamsOptions = React.useMemo(() => {
+    const set = new Set(availableTeams);
+    if (formData['Team Name'] && !set.has(formData['Team Name'])) {
+      set.add(formData['Team Name']);
+    }
+    return Array.from(set);
+  }, [availableTeams, formData]);
+
+  // Derive unique combined developer options including initial dev if custom
+  const devsOptions = React.useMemo(() => {
+    const set = new Set(availableDevelopers);
+    if (formData['Developer'] && !set.has(formData['Developer'])) {
+      set.add(formData['Developer']);
+    }
+    return Array.from(set);
+  }, [availableDevelopers, formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTeamSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === '__custom__') {
+      setIsCustomTeam(true);
+      setFormData(prev => ({ ...prev, 'Team Name': '' }));
+    } else {
+      setIsCustomTeam(false);
+      setFormData(prev => ({ ...prev, 'Team Name': val }));
+    }
+  };
+
+  const handleDevSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === '__custom__') {
+      setIsCustomDeveloper(true);
+      setFormData(prev => ({ ...prev, 'Developer': '' }));
+    } else {
+      setIsCustomDeveloper(false);
+      setFormData(prev => ({ ...prev, 'Developer': val }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -71,13 +121,73 @@ export default function Modal({ onClose, onSubmit, initialData, activeTab, avail
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Team Name</label>
-            <input type="text" name="Team Name" className={styles.input} value={formData['Team Name']} onChange={handleChange} placeholder="e.g. Alpha Team" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className={styles.label}>Team Name</label>
+              {isCustomTeam && (
+                <button type="button" className={styles.switchButton} onClick={() => setIsCustomTeam(false)}>
+                  ← Select existing team
+                </button>
+              )}
+            </div>
+            {isCustomTeam ? (
+              <input
+                type="text"
+                name="Team Name"
+                className={styles.input}
+                value={formData['Team Name']}
+                onChange={handleChange}
+                placeholder="Enter team name"
+                autoFocus
+              />
+            ) : (
+              <select
+                name="Team Name"
+                className={styles.input}
+                value={formData['Team Name']}
+                onChange={handleTeamSelectChange}
+              >
+                <option value="">Select a team</option>
+                {teamsOptions.map((team, i) => (
+                  <option key={i} value={team}>{team}</option>
+                ))}
+                <option value="__custom__">+ Add Custom Team...</option>
+              </select>
+            )}
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Developer</label>
-            <input type="text" name="Developer" className={styles.input} value={formData['Developer']} onChange={handleChange} placeholder="e.g. John Doe" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className={styles.label}>Developer</label>
+              {isCustomDeveloper && (
+                <button type="button" className={styles.switchButton} onClick={() => setIsCustomDeveloper(false)}>
+                  ← Select existing developer
+                </button>
+              )}
+            </div>
+            {isCustomDeveloper ? (
+              <input
+                type="text"
+                name="Developer"
+                className={styles.input}
+                value={formData['Developer']}
+                onChange={handleChange}
+                placeholder="Enter developer name"
+                autoFocus
+              />
+            ) : (
+              <select
+                name="Developer"
+                className={styles.input}
+                value={formData['Developer']}
+                onChange={handleDevSelectChange}
+              >
+                <option value="">Select a developer</option>
+                {devsOptions.map((dev, i) => (
+                  <option key={i} value={dev}>{dev}</option>
+                ))}
+                <option value="__custom__">+ Add Custom Developer...</option>
+              </select>
+            )}
           </div>
 
           <div className={styles.formGroup}>

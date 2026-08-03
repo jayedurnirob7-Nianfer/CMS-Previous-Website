@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import styles from './Dashboard.module.css';
@@ -11,6 +11,8 @@ import ImportModal from './ImportModal';
 import IframeModal from './IframeModal';
 import ConfirmModal from './ConfirmModal';
 import CSVImportModal from './CSVImportModal';
+import NoticeBoard from './NoticeBoard';
+import NoticeModal from './NoticeModal';
 
 const API_URL = '/api/data';
 
@@ -92,6 +94,8 @@ function PreviewThumbnail({ clientWebsite, ourDomain, onLivePreview }) {
       <img
         src={currentProvider.src}
         alt="Website Preview"
+        loading="lazy"
+        decoding="async"
         className={styles.internalPreviewImage}
         style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
         onError={() => {
@@ -131,6 +135,11 @@ export default function Dashboard() {
   const [activeStatFilter, setActiveStatFilter] = useState('total');
   const [previewUrlModal, setPreviewUrlModal] = useState(null);
 
+  const [notices, setNotices] = useState([]);
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+  const [editingNotice, setEditingNotice] = useState(null);
+  const [noticeToDelete, setNoticeToDelete] = useState(null);
+
   const [activeTab, setActiveTab] = useState('All');
   
 const ALL_DEFAULT_PROFILES = [
@@ -158,7 +167,7 @@ const ALL_DEFAULT_PROFILES = [
   const [availableProfiles, setAvailableProfiles] = useState(ALL_DEFAULT_PROFILES);
   const [kamSheetId, setKamSheetId] = useState('');
   const [showTopBar, setShowTopBar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -173,6 +182,27 @@ const ALL_DEFAULT_PROFILES = [
     });
     return Array.from(profileSet).sort();
   }, [availableProfiles, allData]);
+
+  const availableTeams = useMemo(() => {
+    const defaultTeams = ['Eclipse_PXL', 'Point Zero', 'Proxify', 'Shopify', 'Vertex_PXL', 'Wordpress_PXL'];
+    const teamSet = new Set(defaultTeams);
+    allData.forEach(item => {
+      if (item['Team Name'] && String(item['Team Name']).trim()) {
+        teamSet.add(String(item['Team Name']).trim());
+      }
+    });
+    return Array.from(teamSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }, [allData]);
+
+  const availableDevelopers = useMemo(() => {
+    const devSet = new Set();
+    allData.forEach(item => {
+      if (item['Developer'] && String(item['Developer']).trim()) {
+        devSet.add(String(item['Developer']).trim());
+      }
+    });
+    return Array.from(devSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }, [allData]);
 
   useEffect(() => {
     const savedPassword = localStorage.getItem('cms_admin_password');
@@ -197,14 +227,71 @@ const ALL_DEFAULT_PROFILES = [
 
     fetchSettings();
     fetchAllData(hasCache); // Silent fetch if cached data already rendered
+    fetchNotices();
 
     // Silent background polling every 60 seconds to avoid Google Apps Script rate limits
     const interval = setInterval(() => {
       fetchAllData(true);
+      fetchNotices();
     }, 60000);
 
     return () => clearInterval(interval);
   }, []);
+
+  const fetchNotices = async () => {
+    try {
+      const res = await fetch('/api/notices');
+      if (res.ok) {
+        const data = await res.json();
+        setNotices(data);
+      }
+    } catch (err) {
+      console.error('Error fetching notices:', err);
+    }
+  };
+
+  const handleSaveNotice = async (noticeData) => {
+    try {
+      const isEdit = !!noticeData.id;
+      const method = isEdit ? 'PUT' : 'POST';
+      const res = await fetch('/api/notices', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(noticeData),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsNoticeModalOpen(false);
+        setEditingNotice(null);
+        fetchNotices();
+      } else {
+        alert('Failed to save notice: ' + (data.error || 'Server error'));
+      }
+    } catch (err) {
+      console.error('Error saving notice:', err);
+      alert('Failed to save notice: ' + err.message);
+    }
+  };
+
+  const handleDeleteNotice = (id) => {
+    setNoticeToDelete(id);
+  };
+
+  const executeDeleteNotice = async () => {
+    if (!noticeToDelete) return;
+    try {
+      const res = await fetch(`/api/notices?id=${noticeToDelete}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchNotices();
+      } else {
+        alert('Failed to delete notice.');
+      }
+    } catch (err) {
+      console.error('Error deleting notice:', err);
+    } finally {
+      setNoticeToDelete(null);
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -254,21 +341,26 @@ const ALL_DEFAULT_PROFILES = [
 
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowTopBar(false); // Scrolled down
-      } else if (currentScrollY < lastScrollY) {
-        setShowTopBar(true); // Scrolled up
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
+            setShowTopBar(false);
+          } else if (currentScrollY < lastScrollYRef.current) {
+            setShowTopBar(true);
+          }
+          lastScrollYRef.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
       }
-      
-      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -947,6 +1039,21 @@ const ALL_DEFAULT_PROFILES = [
             </div>
           )}
 
+          <NoticeBoard
+            notices={notices}
+            activeTab={activeTab}
+            isAdmin={isAdmin}
+            onAddNotice={() => {
+              setEditingNotice(null);
+              setIsNoticeModalOpen(true);
+            }}
+            onEditNotice={(notice) => {
+              setEditingNotice(notice);
+              setIsNoticeModalOpen(true);
+            }}
+            onDeleteNotice={handleDeleteNotice}
+          />
+
           <div className={styles.statsRow} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             <div 
               className={styles.statCard} 
@@ -1006,11 +1113,9 @@ const ALL_DEFAULT_PROFILES = [
               const isExpanded = expandedCard === clientName;
               return (
                 <motion.div 
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.5) }}
+                  transition={{ duration: 0.25 }}
                   key={clientName} 
                   data-card="true"
                   className={`${styles.card} ${group.length > 1 ? styles.cardWide : ''} ${isExpanded ? styles.expandedCard : ''}`}
@@ -1168,6 +1273,8 @@ const ALL_DEFAULT_PROFILES = [
           initialData={editingItem}
           activeTab={activeTab}
           availableProfiles={fullProfilesList}
+          availableTeams={availableTeams}
+          availableDevelopers={availableDevelopers}
         />
       )}
 
@@ -1340,11 +1447,31 @@ const ALL_DEFAULT_PROFILES = [
         message="Are you sure you want to delete this website? This cannot be undone."
       />
 
+      <ConfirmModal
+        isOpen={!!noticeToDelete}
+        onClose={() => setNoticeToDelete(null)}
+        onConfirm={executeDeleteNotice}
+        title="Delete Notice"
+        message="Are you sure you want to delete this notice? This action cannot be undone."
+      />
+
       {isCSVImportModalOpen && (
         <CSVImportModal 
           onClose={() => setIsCSVImportModalOpen(false)}
           onImportSuccess={() => fetchAllData(false, true)}
           adminPassword={adminPassword}
+        />
+      )}
+
+      {isNoticeModalOpen && (
+        <NoticeModal
+          onClose={() => {
+            setIsNoticeModalOpen(false);
+            setEditingNotice(null);
+          }}
+          onSubmit={handleSaveNotice}
+          initialData={editingNotice}
+          activeTab={activeTab}
         />
       )}
     </div>
