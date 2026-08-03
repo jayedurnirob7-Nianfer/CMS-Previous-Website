@@ -104,7 +104,20 @@ export async function POST(request) {
 
     if (action === 'update') {
       const { rowIndex, oldSheet, ...updateData } = body;
-      await Client.findByIdAndUpdate(rowIndex, updateData);
+      const updatedDoc = await Client.findByIdAndUpdate(rowIndex, updateData, { new: true });
+
+      // If Deli_Last_Time was updated, sync it across all website documents belonging to the same Client Name
+      if (updatedDoc && updateData['Deli_Last_Time'] !== undefined && updatedDoc['Client Name']) {
+        const clientName = updatedDoc['Client Name'].trim();
+        if (clientName) {
+          const escapedName = clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          await Client.updateMany(
+            { 'Client Name': { $regex: new RegExp(`^${escapedName}$`, 'i') } },
+            { $set: { Deli_Last_Time: updateData['Deli_Last_Time'] } }
+          );
+        }
+      }
+
       invalidateCache();
       return NextResponse.json({ status: 'success' });
     }
@@ -198,7 +211,10 @@ export async function POST(request) {
           }
 
           if (Object.keys(updateData).length > 0) {
-            await Client.updateOne({ _id: existing._id }, { $set: updateData });
+            await Client.updateMany(
+              { 'Client Name': { $regex: new RegExp(`^${escapedName}$`, 'i') } },
+              { $set: updateData }
+            );
             updatedCount++;
           }
         } else {
