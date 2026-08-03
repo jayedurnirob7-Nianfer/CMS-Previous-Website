@@ -133,10 +133,29 @@ export default function Dashboard() {
 
   const [activeTab, setActiveTab] = useState('All');
   
+const ALL_DEFAULT_PROFILES = [
+  'thestudioxx_fiverr',
+  'graphixnest_fiverr',
+  'Coppercart_fiverr',
+  'pixelora_studio_fiverr',
+  'Hypercanvas',
+  'ink_byte_studio_fiverr',
+  'Verispace_fiverr',
+  'snaplify',
+  'orbitnexa_fiverr',
+  'sketchmuse_fiverr',
+  'vectorslide',
+  'Cloudnoval',
+  'gridmorph',
+  'prism_path',
+  'socio_vista_fiverr',
+  'Vanilawix_fiverr'
+];
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [siteName, setSiteName] = useState('CMS Dashboard');
-  const [availableProfiles, setAvailableProfiles] = useState(['thestudioxx_fiverr', 'sketchmuse_fiverr']);
+  const [availableProfiles, setAvailableProfiles] = useState(ALL_DEFAULT_PROFILES);
   const [kamSheetId, setKamSheetId] = useState('');
   const [showTopBar, setShowTopBar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -144,6 +163,16 @@ export default function Dashboard() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState(null);
+
+  const fullProfilesList = useMemo(() => {
+    const profileSet = new Set([...ALL_DEFAULT_PROFILES, ...availableProfiles]);
+    allData.forEach(item => {
+      if (item['Profile Name'] && String(item['Profile Name']).trim()) {
+        profileSet.add(String(item['Profile Name']).trim());
+      }
+    });
+    return Array.from(profileSet).sort();
+  }, [availableProfiles, allData]);
 
   useEffect(() => {
     const savedPassword = localStorage.getItem('cms_admin_password');
@@ -1127,7 +1156,7 @@ export default function Dashboard() {
           onSubmit={handleAddData} 
           initialData={editingItem}
           activeTab={activeTab}
-          availableProfiles={availableProfiles}
+          availableProfiles={fullProfilesList}
         />
       )}
 
@@ -1143,7 +1172,7 @@ export default function Dashboard() {
           onClose={() => setIsSettingsModalOpen(false)}
           onSave={handleSaveSettings}
           currentSiteName={siteName}
-          currentProfiles={availableProfiles}
+          currentProfiles={fullProfilesList}
           currentKamSheetId={kamSheetId}
         />
       )}

@@ -4,10 +4,29 @@ import Client from '../../../models/Client';
 
 export const dynamic = 'force-dynamic';
 
+const ALL_DEFAULT_PROFILES = [
+  'thestudioxx_fiverr',
+  'graphixnest_fiverr',
+  'Coppercart_fiverr',
+  'pixelora_studio_fiverr',
+  'Hypercanvas',
+  'ink_byte_studio_fiverr',
+  'Verispace_fiverr',
+  'snaplify',
+  'orbitnexa_fiverr',
+  'sketchmuse_fiverr',
+  'vectorslide',
+  'Cloudnoval',
+  'gridmorph',
+  'prism_path',
+  'socio_vista_fiverr',
+  'Vanilawix_fiverr'
+];
+
 // Temporary in-memory settings since we don't have a settings model yet
 let settings = {
   siteName: 'CMS Dashboard',
-  profiles: ['thestudioxx_fiverr', 'sketchmuse_fiverr'],
+  profiles: ALL_DEFAULT_PROFILES,
   kamSheetId: '',
   password: 'admin', // The default password, normally stored securely
 };
