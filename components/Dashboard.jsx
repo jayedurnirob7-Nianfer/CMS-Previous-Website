@@ -308,13 +308,13 @@ const ALL_DEFAULT_PROFILES = [
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload)
       });
       const result = await response.json();
       if (result.status === 'success') {
-        fetchAllData(); 
+        await fetchAllData(false, true); // Force fresh fetch from server
         setIsModalOpen(false);
         setEditingItem(null);
       } else {
@@ -337,13 +337,13 @@ const ALL_DEFAULT_PROFILES = [
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ action: 'delete', sheet: itemToDelete.category, rowIndex: itemToDelete.rowIndex, password: adminPassword })
       });
       const result = await response.json();
       if (result.status === 'success') {
-        fetchAllData();
+        await fetchAllData(false, true); // Force fresh fetch from server
       } else {
         alert("Error deleting: " + result.error);
         if (result.error === "Invalid password") handleLogout();
@@ -720,7 +720,16 @@ const ALL_DEFAULT_PROFILES = [
       }
     });
 
-    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]));
+    return Object.entries(groups).sort((a, b) => {
+      // Prioritize cards with website links included first
+      const aHasWebsite = a[1].some(item => !!item['Client Website'] || !!item['Our Domain']);
+      const bHasWebsite = b[1].some(item => !!item['Client Website'] || !!item['Our Domain']);
+
+      if (aHasWebsite && !bHasWebsite) return -1;
+      if (!aHasWebsite && bHasWebsite) return 1;
+
+      return a[0].localeCompare(b[0]);
+    });
   }, [processedData]);
 
 // Stats are now calculated above processedData
