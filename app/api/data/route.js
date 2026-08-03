@@ -150,13 +150,20 @@ export async function POST(request) {
           'Client Name': { $regex: new RegExp(`^${escapedName}$`, 'i') } 
         });
 
+        // Helper: only accept value as URL if it looks like one
+        const isValidUrl = (val) => val && (val.startsWith('http') || val.startsWith('www.') || val.includes('.'));
+        const PLATFORM_NAMES = ['wordpress', 'shopify', 'wix', 'squarespace', 'webflow'];
+        const isPlatformName = (val) => val && PLATFORM_NAMES.includes(val.trim().toLowerCase());
+
         if (existing) {
           const updateData = {};
-          if (record['Client Website'] !== undefined && record['Client Website'] !== '') {
-            updateData['Client Website'] = record['Client Website'].trim();
+          const cw = (record['Client Website'] || '').trim();
+          const od = (record['Our Domain'] || '').trim();
+          if (cw && isValidUrl(cw) && !isPlatformName(cw)) {
+            updateData['Client Website'] = cw;
           }
-          if (record['Our Domain'] !== undefined && record['Our Domain'] !== '') {
-            updateData['Our Domain'] = record['Our Domain'].trim();
+          if (od && isValidUrl(od) && !isPlatformName(od)) {
+            updateData['Our Domain'] = od;
           }
           if (record['Developer'] !== undefined && record['Developer'] !== '') {
             updateData['Developer'] = record['Developer'].trim();
