@@ -326,6 +326,16 @@ const ALL_DEFAULT_PROFILES = [
     }
   };
 
+  const openAddModal = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
+  };
+
   const handleDelete = (item) => {
     if (!isAdmin) return;
     setItemToDelete(item);
@@ -448,15 +458,7 @@ const ALL_DEFAULT_PROFILES = [
     }
   };
 
-  const openEditModal = (item) => {
-    setEditingItem(item);
-    setIsModalOpen(true);
-  };
 
-  const openAddModal = () => {
-    setEditingItem(null);
-    setIsModalOpen(true);
-  };
 
   const handleCopyLink = (text) => {
     if (!text) return;

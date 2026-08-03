@@ -5,7 +5,7 @@ import styles from './Modal.module.css';
 
 export default function Modal({ onClose, onSubmit, initialData, activeTab, availableProfiles = [] }) {
   const [formData, setFormData] = useState({
-    'sheet': (activeTab && activeTab !== 'All') ? activeTab : 'Wordpress',
+    'sheet': initialData ? (initialData.category || initialData['sheet'] || 'Wordpress') : ((activeTab && activeTab !== 'All') ? activeTab : 'Wordpress'),
     'Profile Name': initialData ? initialData['Profile Name'] || '' : '',
     'Type of website': initialData ? initialData['Type of website'] || '' : '',
     'Client Name': initialData ? initialData['Client Name'] || '' : '',
@@ -87,12 +87,12 @@ export default function Modal({ onClose, onSubmit, initialData, activeTab, avail
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Our Domain</label>
-            <input type="url" name="Our Domain" className={styles.input} value={formData['Our Domain']} onChange={handleChange} placeholder="https://..." />
+            <input type="text" name="Our Domain" className={styles.input} value={formData['Our Domain']} onChange={handleChange} placeholder="https://..." />
           </div>
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Client Website</label>
-            <input type="url" name="Client Website" className={styles.input} value={formData['Client Website']} onChange={handleChange} placeholder="https://..." />
+            <input type="text" name="Client Website" className={styles.input} value={formData['Client Website']} onChange={handleChange} placeholder="https://..." />
           </div>
 
           <div className={styles.formGroup}>
