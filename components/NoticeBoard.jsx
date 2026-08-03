@@ -13,6 +13,8 @@ export default function NoticeBoard({
   onReorderNotices,
 }) {
   const [copiedKey, setCopiedKey] = useState(null);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const filteredNotices = useMemo(() => {
     const currentTab = activeTab || 'All';
@@ -28,13 +30,33 @@ export default function NoticeBoard({
     }, 2000);
   };
 
-  const handleMove = (index, direction) => {
-    if (!onReorderNotices) return;
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= filteredNotices.length) return;
+  const handleDragStart = (e, index) => {
+    if (!isAdmin) return;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e, index) => {
+    if (!isAdmin) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    if (!isAdmin) return;
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
 
     const listCopy = [...filteredNotices];
-    const [movedItem] = listCopy.splice(index, 1);
+    const [movedItem] = listCopy.splice(draggedIndex, 1);
     listCopy.splice(targetIndex, 0, movedItem);
 
     const reorderedItems = listCopy.map((item, idx) => ({
@@ -42,7 +64,17 @@ export default function NoticeBoard({
       order: idx,
     }));
 
-    onReorderNotices(reorderedItems, listCopy);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    if (onReorderNotices) {
+      onReorderNotices(reorderedItems, listCopy);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const getBadgeClass = (category) => {
@@ -84,11 +116,26 @@ export default function NoticeBoard({
           filteredNotices.map((notice, index) => {
             const linkCopyKey = `link-${notice._id}`;
             const isLinkCopied = copiedKey === linkCopyKey;
+            const isDragging = draggedIndex === index;
+            const isDragOver = dragOverIndex === index && draggedIndex !== index;
 
             return (
-              <div key={notice._id} className={styles.noticeCard}>
+              <div
+                key={notice._id}
+                draggable={isAdmin}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`${styles.noticeCard} ${isDragging ? styles.dragging : ''} ${isDragOver ? styles.dragOver : ''}`}
+              >
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
+                    {isAdmin && (
+                      <span className={styles.dragHandle} title="Click & drag to reorder notice">
+                        ⠿
+                      </span>
+                    )}
                     {notice.isPinned && <span className={styles.pinIcon} title="Pinned notice">📌</span>}
                     {notice.title}
                   </div>
@@ -98,24 +145,6 @@ export default function NoticeBoard({
                     </span>
                     {isAdmin && (
                       <div className={styles.adminControls}>
-                        <button
-                          className={styles.iconBtn}
-                          onClick={() => handleMove(index, 'up')}
-                          disabled={index === 0}
-                          title="Move Up"
-                          style={{ opacity: index === 0 ? 0.3 : 1, cursor: index === 0 ? 'not-allowed' : 'pointer' }}
-                        >
-                          ▲ Move Up
-                        </button>
-                        <button
-                          className={styles.iconBtn}
-                          onClick={() => handleMove(index, 'down')}
-                          disabled={index === filteredNotices.length - 1}
-                          title="Move Down"
-                          style={{ opacity: index === filteredNotices.length - 1 ? 0.3 : 1, cursor: index === filteredNotices.length - 1 ? 'not-allowed' : 'pointer' }}
-                        >
-                          ▼ Move Down
-                        </button>
                         <button
                           className={styles.iconBtn}
                           onClick={() => onEditNotice(notice)}
