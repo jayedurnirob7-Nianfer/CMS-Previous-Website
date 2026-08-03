@@ -136,7 +136,6 @@ export default function NoticeBoard({
                         ⠿
                       </span>
                     )}
-                    {notice.isPinned && <span className={styles.pinIcon} title="Pinned notice">📌</span>}
                     {notice.title}
                   </div>
                   <div className={styles.headerRight}>

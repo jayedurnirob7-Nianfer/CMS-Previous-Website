@@ -835,7 +835,14 @@ const ALL_DEFAULT_PROFILES = [
     });
 
     return Object.entries(groups).sort((a, b) => {
-      // Prioritize cards with website links included first
+      // 1. Prioritize cards with "Good" status first
+      const aIsGood = a[1].some(item => (item['Status'] || '').toLowerCase().includes('good'));
+      const bIsGood = b[1].some(item => (item['Status'] || '').toLowerCase().includes('good'));
+
+      if (aIsGood && !bIsGood) return -1;
+      if (!aIsGood && bIsGood) return 1;
+
+      // 2. Prioritize cards with website links included first
       const aHasWebsite = a[1].some(item => !!item['Client Website'] || !!item['Our Domain']);
       const bHasWebsite = b[1].some(item => !!item['Client Website'] || !!item['Our Domain']);
 
