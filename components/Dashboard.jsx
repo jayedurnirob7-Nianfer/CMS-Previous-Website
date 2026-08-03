@@ -1237,6 +1237,12 @@ const ALL_DEFAULT_PROFILES = [
                             {item['Type of website'] && (
                               <span className={styles.type}>{item['Type of website']}</span>
                             )}
+                            {item['Developer'] && (
+                              <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.3)' }}>DEV: {item['Developer']}</span>
+                            )}
+                            {item['Deli_Last_Time'] && (
+                              <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>🕒 {item['Deli_Last_Time']}</span>
+                            )}
                             {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
                               <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
                                 {item['Status']}

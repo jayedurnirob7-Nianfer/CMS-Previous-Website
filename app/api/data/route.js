@@ -104,20 +104,7 @@ export async function POST(request) {
 
     if (action === 'update') {
       const { rowIndex, oldSheet, ...updateData } = body;
-      const updatedDoc = await Client.findByIdAndUpdate(rowIndex, updateData, { new: true });
-
-      // If Deli_Last_Time was updated, sync it across all website documents belonging to the same Client Name
-      if (updatedDoc && updateData['Deli_Last_Time'] !== undefined && updatedDoc['Client Name']) {
-        const clientName = updatedDoc['Client Name'].trim();
-        if (clientName) {
-          const escapedName = clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          await Client.updateMany(
-            { 'Client Name': { $regex: new RegExp(`^${escapedName}$`, 'i') } },
-            { $set: { Deli_Last_Time: updateData['Deli_Last_Time'] } }
-          );
-        }
-      }
-
+      await Client.findByIdAndUpdate(rowIndex, updateData);
       invalidateCache();
       return NextResponse.json({ status: 'success' });
     }
