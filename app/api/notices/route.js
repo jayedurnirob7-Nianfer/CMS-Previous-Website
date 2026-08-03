@@ -16,7 +16,7 @@ export async function GET(request) {
     }
 
     const notices = await Notice.find(query)
-      .sort({ isPinned: -1, createdAt: -1 })
+      .sort({ isPinned: -1, order: 1, createdAt: -1 })
       .lean();
 
     const formattedNotices = notices.map(notice => ({
@@ -38,7 +38,7 @@ export async function POST(request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { title, content, link, category, isPinned } = body;
+    const { title, content, link, category, isPinned, order } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
@@ -50,6 +50,7 @@ export async function POST(request) {
       link: link || '',
       category: category || 'All',
       isPinned: isPinned !== undefined ? isPinned : true,
+      order: order !== undefined ? order : 0,
     });
 
     await newNotice.save();
@@ -63,21 +64,33 @@ export async function PUT(request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { id, title, content, link, category, isPinned } = body;
+
+    if (body.action === 'reorder' && Array.isArray(body.items)) {
+      await Promise.all(
+        body.items.map(item =>
+          Notice.findByIdAndUpdate(item.id, { order: item.order })
+        )
+      );
+      return NextResponse.json({ status: 'success' });
+    }
+
+    const { id, title, content, link, category, isPinned, order } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Notice ID is required' }, { status: 400 });
     }
 
+    const updateDoc = {};
+    if (title !== undefined) updateDoc.title = title;
+    if (content !== undefined) updateDoc.content = content;
+    if (link !== undefined) updateDoc.link = link;
+    if (category !== undefined) updateDoc.category = category;
+    if (isPinned !== undefined) updateDoc.isPinned = isPinned;
+    if (order !== undefined) updateDoc.order = order;
+
     const updated = await Notice.findByIdAndUpdate(
       id,
-      {
-        title,
-        content,
-        link: link || '',
-        category: category || 'All',
-        isPinned: isPinned !== undefined ? isPinned : true,
-      },
+      { $set: updateDoc },
       { new: true }
     );
 

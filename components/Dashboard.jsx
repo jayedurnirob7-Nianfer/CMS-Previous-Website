@@ -293,6 +293,26 @@ const ALL_DEFAULT_PROFILES = [
     }
   };
 
+  const handleReorderNotices = async (reorderedItems, optimisticList) => {
+    if (optimisticList) {
+      setNotices(prev => {
+        const orderMap = new Map(reorderedItems.map(item => [item.id, item.order]));
+        const updated = prev.map(n => orderMap.has(n._id) ? { ...n, order: orderMap.get(n._id) } : n);
+        return updated.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      });
+    }
+    try {
+      await fetch('/api/notices', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reorder', items: reorderedItems }),
+      });
+      fetchNotices();
+    } catch (err) {
+      console.error('Error reordering notices:', err);
+    }
+  };
+
   const fetchSettings = async () => {
     try {
       const response = await fetch(`${API_URL}?action=getSettings`);
@@ -1052,6 +1072,7 @@ const ALL_DEFAULT_PROFILES = [
               setIsNoticeModalOpen(true);
             }}
             onDeleteNotice={handleDeleteNotice}
+            onReorderNotices={handleReorderNotices}
           />
 
           <div className={styles.statsRow} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

@@ -10,6 +10,7 @@ export default function NoticeBoard({
   onAddNotice,
   onEditNotice,
   onDeleteNotice,
+  onReorderNotices,
 }) {
   const [copiedKey, setCopiedKey] = useState(null);
 
@@ -25,6 +26,23 @@ export default function NoticeBoard({
     setTimeout(() => {
       setCopiedKey(null);
     }, 2000);
+  };
+
+  const handleMove = (index, direction) => {
+    if (!onReorderNotices) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= filteredNotices.length) return;
+
+    const listCopy = [...filteredNotices];
+    const [movedItem] = listCopy.splice(index, 1);
+    listCopy.splice(targetIndex, 0, movedItem);
+
+    const reorderedItems = listCopy.map((item, idx) => ({
+      id: item._id,
+      order: idx,
+    }));
+
+    onReorderNotices(reorderedItems, listCopy);
   };
 
   const getBadgeClass = (category) => {
@@ -63,7 +81,7 @@ export default function NoticeBoard({
             No active notices or resource links posted yet for {activeTab === 'All' ? 'this dashboard' : activeTab}.
           </div>
         ) : (
-          filteredNotices.map((notice) => {
+          filteredNotices.map((notice, index) => {
             const linkCopyKey = `link-${notice._id}`;
             const isLinkCopied = copiedKey === linkCopyKey;
 
@@ -80,6 +98,24 @@ export default function NoticeBoard({
                     </span>
                     {isAdmin && (
                       <div className={styles.adminControls}>
+                        <button
+                          className={styles.iconBtn}
+                          onClick={() => handleMove(index, 'up')}
+                          disabled={index === 0}
+                          title="Move Up"
+                          style={{ opacity: index === 0 ? 0.3 : 1, cursor: index === 0 ? 'not-allowed' : 'pointer' }}
+                        >
+                          ▲ Move Up
+                        </button>
+                        <button
+                          className={styles.iconBtn}
+                          onClick={() => handleMove(index, 'down')}
+                          disabled={index === filteredNotices.length - 1}
+                          title="Move Down"
+                          style={{ opacity: index === filteredNotices.length - 1 ? 0.3 : 1, cursor: index === filteredNotices.length - 1 ? 'not-allowed' : 'pointer' }}
+                        >
+                          ▼ Move Down
+                        </button>
                         <button
                           className={styles.iconBtn}
                           onClick={() => onEditNotice(notice)}
