@@ -437,8 +437,20 @@ export default function Dashboard() {
   };
 
   const handleExportCSV = () => {
-    if (processedData.length === 0) {
-      alert("No data to export!");
+    // Filter specifically for "No Website Included" records (missing both Client Website and Our Domain)
+    let exportData = processedData.filter(item => !item['Client Website'] && !item['Our Domain']);
+
+    // If active filters yield no results, search across all items in current active tab
+    if (exportData.length === 0) {
+      let source = allData;
+      if (activeTab !== 'All') {
+        source = source.filter(item => item.category === activeTab);
+      }
+      exportData = source.filter(item => !item['Client Website'] && !item['Our Domain']);
+    }
+    
+    if (exportData.length === 0) {
+      alert("No websites with missing links found to export!");
       return;
     }
     
@@ -447,7 +459,7 @@ export default function Dashboard() {
     const csvRows = [];
     csvRows.push(headers.join(','));
     
-    for (const row of processedData) {
+    for (const row of exportData) {
       const values = headers.map(header => {
         const val = row[header] ? String(row[header]).replace(/"/g, '""') : '';
         return `"${val}"`;
@@ -460,7 +472,7 @@ export default function Dashboard() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `cms_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `no_website_included_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -766,8 +778,8 @@ export default function Dashboard() {
             )}
             {isAdmin && (
               <>
-                <button className={styles.exportButton} onClick={handleExportCSV} title="Export to CSV">
-                  ⬇️ Export
+                <button className={styles.exportButton} onClick={handleExportCSV} title="Export 'No Website Included' clients to CSV">
+                  ⬇️ Export CSV
                 </button>
                 <button 
                   className={styles.loginButton} 
