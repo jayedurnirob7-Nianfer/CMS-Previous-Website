@@ -1,18 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-color: #0b0e14;
-  --text-color: #f3f4f6;
-  --text-muted: #9ca3af;
-  --card-bg: rgba(22, 27, 34, 0.6);
-  --card-border: rgba(255, 255, 255, 0.05);
-  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
+  --bg-color: #07090e;
+  --bg-gradient: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+                 radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.08) 0%, transparent 45%),
+                 radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.06) 0%, transparent 60%);
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+  --card-bg: rgba(15, 20, 32, 0.65);
+  --card-bg-hover: rgba(23, 30, 48, 0.85);
+  --card-border: rgba(255, 255, 255, 0.07);
+  --card-border-hover: rgba(99, 102, 241, 0.35);
+  --card-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.4);
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --accent-glow: 0 0 20px rgba(99, 102, 241, 0.4);
   --success: #10b981;
+  --success-glow: 0 0 15px rgba(16, 185, 129, 0.3);
   --danger: #ef4444;
-  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --glass-blur: 12px;
+  --warning: #f59e0b;
+  --font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --glass-blur: 16px;
 }
 
 * {
@@ -21,34 +30,58 @@
   padding: 0;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   background-color: var(--bg-color);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text-color);
   font-family: var(--font-family);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-                    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
-  background-attachment: fixed;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.02em;
 }
 
 a {
-  color: var(--accent);
+  color: #60a5fa;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 a:hover {
-  color: var(--accent-hover);
+  color: #93c5fd;
 }
 
 button {
   cursor: pointer;
   font-family: inherit;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(7, 9, 14, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
 }
