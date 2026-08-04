@@ -54,9 +54,9 @@ function PreviewThumbnail({ clientWebsite, ourDomain, onLivePreview }) {
       const encoded = encodeURIComponent(formatted);
 
       providers.push({
-        src: `https://image.thum.io/get/width/600/crop/800/${formatted}`,
+        src: `https://api.microlink.io/?url=${encoded}&screenshot=true&meta=false&embed=screenshot.url`,
         targetUrl: formatted,
-        name: 'Thum.io'
+        name: 'Microlink'
       });
       providers.push({
         src: `https://s0.wp.com/mshots/v1/${encoded}?w=600&h=800`,
@@ -64,14 +64,9 @@ function PreviewThumbnail({ clientWebsite, ourDomain, onLivePreview }) {
         name: 'WordPress mshots'
       });
       providers.push({
-        src: `https://api.microlink.io/?url=${encoded}&screenshot=true&meta=false&embed=screenshot.url`,
+        src: `https://mini.s-shot.ru/1024x768/JPEG/600/Z100/?${encoded}`,
         targetUrl: formatted,
-        name: 'Microlink'
-      });
-      providers.push({
-        src: `https://mini.s-shot.ru/1024x768/600/jpeg/?${encoded}`,
-        targetUrl: formatted,
-        name: 's-shot'
+        name: 'S-Shot'
       });
     });
     return providers;
@@ -855,6 +850,17 @@ const ALL_DEFAULT_PROFILES = [
 
 // Stats are now calculated above processedData
 
+  const tabCounts = useMemo(() => {
+    const sourceData = applyStatusFilter(allData);
+    const counts = { All: sourceData.length, Wordpress: 0, WIX: 0, Shopify: 0 };
+    sourceData.forEach(item => {
+      if (item.category && counts[item.category] !== undefined) {
+        counts[item.category]++;
+      }
+    });
+    return counts;
+  }, [allData, filterStatus]);
+
   const globalSearchCount = useMemo(() => {
     if ((!searchTerm && activeSearchTags.length === 0) || activeTab === 'All') return 0;
     
@@ -957,71 +963,85 @@ const ALL_DEFAULT_PROFILES = [
         </header>
 
         <div className={styles.controlsContainer}>
-          {!searchTerm && (
-            <div className={styles.tabsContainer}>
-              {['All', 'Wordpress', 'WIX', 'Shopify'].map(tab => (
-                <button 
-                  key={tab} 
-                  className={`${styles.tabButton} ${activeTab === tab ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className={styles.filterContainer}>
-            <select 
-              className={styles.filterSelect}
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="all">All Statuses</option>
-              <option value="good">Good</option>
-              <option value="bad">Bad</option>
-              <option value="not_active">Not Active</option>
-              <option value="missing_client_name">Client Name Not Found</option>
-              <option value="missing_client">Client Website Not Found</option>
-              <option value="no_website">No Website Included</option>
-              <option value="has_client_website">Client Website Included</option>
-              {isAdmin && <option value="duplicates">⚠️ Show Duplicates</option>}
-            </select>
-            <div className={styles.searchWrapper}>
-              <div className={styles.searchInner}>
-                {activeSearchTags.map(tag => (
-                  <span key={tag} className={styles.activeTagPill}>
-                    {tag}
+          <div className={styles.controlPanel}>
+            <div className={styles.panelRow}>
+              {!searchTerm && (
+                <div className={styles.segmentTrack}>
+                  {[
+                    { id: 'All', label: 'All', icon: '🌐' },
+                    { id: 'Wordpress', label: 'WordPress', icon: '🅏' },
+                    { id: 'WIX', label: 'WIX', icon: '⬢' },
+                    { id: 'Shopify', label: 'Shopify', icon: '🛍️' }
+                  ].map(tab => (
                     <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveSearchTags(prev => prev.filter(t => t !== tag));
-                      }}
-                      className={styles.removeTagBtn}
+                      key={tab.id} 
+                      className={`${styles.segmentTab} ${activeTab === tab.id ? styles.activeSegmentTab : ''}`}
+                      onClick={() => setActiveTab(tab.id)}
                     >
-                      &times;
+                      <span className={styles.tabIcon}>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                      <span className={styles.countBadge}>{tabCounts[tab.id] || 0}</span>
                     </button>
-                  </span>
-                ))}
-                <input 
-                  type="text" 
-                  className={styles.searchBar} 
-                  placeholder={(searchTerm || activeSearchTags.length > 0) ? "Search..." : "Search by client name, domain, or type..."}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                />
-              </div>
-              {(searchTerm || activeSearchTags.length > 0) && (
-                <button 
-                  className={styles.clearSearchButton}
-                  onClick={() => { setSearchTerm(''); setActiveSearchTags([]); }}
-                  title="Clear search"
-                >
-                  &times;
-                </button>
+                  ))}
+                </div>
               )}
+            </div>
+
+            <div className={styles.panelRow}>
+              <select 
+                className={styles.filterSelect}
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">⚡ All Statuses</option>
+                <option value="good">🟢 Good Status</option>
+                <option value="bad">🔴 Bad Status</option>
+                <option value="not_active">🟡 Not Active</option>
+                <option value="missing_client_name">👤 Client Name Not Found</option>
+                <option value="missing_client">🔗 Client Website Not Found</option>
+                <option value="no_website">🚫 No Website Included</option>
+                <option value="has_client_website">🌐 Client Website Included</option>
+                {isAdmin && <option value="duplicates">⚠️ Show Duplicates</option>}
+              </select>
+
+              <div className={styles.searchWrapper}>
+                <span className={styles.searchIconPrefix}>🔍</span>
+                <div className={styles.searchInner}>
+                  {activeSearchTags.map(tag => (
+                    <span key={tag} className={styles.activeTagPill}>
+                      {tag}
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveSearchTags(prev => prev.filter(t => t !== tag));
+                        }}
+                        className={styles.removeTagBtn}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                  <input 
+                    type="text" 
+                    className={styles.searchBar} 
+                    placeholder={(searchTerm || activeSearchTags.length > 0) ? "Search..." : "Search by client name, domain, or type..."}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                  />
+                </div>
+                {(searchTerm || activeSearchTags.length > 0) && (
+                  <button 
+                    className={styles.clearSearchButton}
+                    onClick={() => { setSearchTerm(''); setActiveSearchTags([]); }}
+                    title="Clear search"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           {allAvailableTags.length > 0 && isSearchFocused && (
@@ -1146,13 +1166,16 @@ const ALL_DEFAULT_PROFILES = [
                   transition={{ duration: 0.25 }}
                   key={clientName} 
                   data-card="true"
-                  className={`${styles.card} ${group.length > 1 ? styles.cardWide : ''} ${isExpanded ? styles.expandedCard : ''}`}
+                  className={`${styles.card} ${group.length > 2 ? styles.cardWide3 : (group.length > 1 ? styles.cardWide2 : '')} ${isExpanded ? styles.expandedCard : ''}`}
                   onClick={() => setExpandedCard(isExpanded ? null : clientName)}
                   style={{ cursor: isExpanded ? 'default' : 'pointer' }}
                 >
                   <div className={`${styles.cardContent} ${isExpanded ? styles.scrollableContent : ''}`}>
                     <div className={styles.cardHeader}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <div className={styles.clientAvatar}>
+                          {clientName ? clientName.charAt(0).toUpperCase() : 'C'}
+                        </div>
                         <h3 className={styles.clientName}>{clientName}</h3>
                         <button 
                           className={styles.copyButton} 
@@ -1165,7 +1188,10 @@ const ALL_DEFAULT_PROFILES = [
                       </div>
                     </div>
                     
-                    <div className={`${styles.details} ${group.length > 1 ? styles.detailsGrid : ''}`}>
+                    <div 
+                      className={`${styles.details} ${group.length > 1 ? styles.detailsGrid : ''}`}
+                      style={group.length > 1 ? { display: 'grid', gridTemplateColumns: `repeat(${Math.min(group.length, 3)}, minmax(0, 1fr))`, gap: '1rem', width: '100%' } : {}}
+                    >
                       {group.map((item, i) => {
                         const hasNoWebsite = !item['Client Website'] && !item['Our Domain'];
                         const isOrderDone = (item['Deadline Status'] || '').toLowerCase().includes('order done');
