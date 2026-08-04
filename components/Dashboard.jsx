@@ -131,6 +131,7 @@ export default function Dashboard() {
   const [previewUrlModal, setPreviewUrlModal] = useState(null);
 
   const [notices, setNotices] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
   const [editingNotice, setEditingNotice] = useState(null);
   const [noticeToDelete, setNoticeToDelete] = useState(null);
@@ -351,6 +352,21 @@ const ALL_DEFAULT_PROFILES = [
     } finally {
       clearTimeout(safetyTimer);
       setLoading(false);
+    }
+  };
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchAllData(false, true),
+        fetchNotices(),
+        fetchSettings()
+      ]);
+    } catch (err) {
+      console.error('Error refreshing data:', err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   };
 
@@ -930,11 +946,12 @@ const ALL_DEFAULT_PROFILES = [
             <button 
               className={styles.loginButton} 
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              disabled={loading}
-              onClick={() => fetchAllData(false, true)}
+              disabled={isRefreshing || loading}
+              onClick={handleManualRefresh}
               title="Refresh data from server"
             >
-              🔄 Refresh
+              <span style={{ display: 'inline-block', transition: 'transform 0.5s ease', transform: isRefreshing ? 'rotate(360deg)' : 'none' }}>🔄</span>
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </button>
             {isAdmin ? (
               <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>

@@ -91,7 +91,7 @@ export async function PUT(request) {
     const updated = await Notice.findByIdAndUpdate(
       id,
       { $set: updateDoc },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!updated) {

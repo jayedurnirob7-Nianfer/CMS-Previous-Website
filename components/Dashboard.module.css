@@ -216,30 +216,37 @@
 .searchWrapper {
   display: flex;
   align-items: center;
-  background-color: rgba(7, 9, 14, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background-color: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid rgba(99, 102, 241, 0.45);
   border-radius: 12px;
-  padding: 0.35rem 0.85rem;
+  padding: 0.4rem 0.9rem;
   flex: 1;
-  min-width: 260px;
-  transition: all 0.2s ease;
-  gap: 0.5rem;
+  min-width: 280px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.searchWrapper:hover {
+  border-color: rgba(99, 102, 241, 0.75);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  background-color: rgba(15, 23, 42, 0.98);
 }
 
 .searchIconPrefix {
-  font-size: 0.95rem;
-  color: #64748b;
+  font-size: 1.05rem;
+  color: #818cf8;
   flex-shrink: 0;
 }
 
 .searchWrapper:focus-within {
   border-color: #6366f1;
-  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
-  background-color: rgba(7, 9, 14, 0.95);
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.5);
+  background-color: #0f172a;
 }
 
 .searchWrapper:focus-within .searchIconPrefix {
-  color: #818cf8;
+  color: #a5b4fc;
 }
 
 .searchInner {
@@ -255,8 +262,9 @@
   padding: 0.45rem;
   background-color: transparent;
   border: none;
-  color: #f8fafc;
-  font-size: 0.875rem;
+  color: #ffffff;
+  font-size: 0.925rem;
+  font-weight: 500;
   flex: 1;
   min-width: 140px;
 }
@@ -266,7 +274,8 @@
 }
 
 .searchBar::placeholder {
-  color: #64748b;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .activeTagPill {

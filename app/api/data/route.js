@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/mongodb';
 import Client from '../../../models/Client';
+import { syncGoogleSheetsToMongo } from '../../../lib/sheetsSync';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,14 @@ export async function GET(request) {
         return NextResponse.json(dataCache.data);
       }
 
+      if (forceFresh) {
+        try {
+          await syncGoogleSheetsToMongo();
+        } catch (syncErr) {
+          console.error('Sheet sync error on fresh fetch:', syncErr.message);
+        }
+      }
+
       const clients = await Client.find({}).select('-__v').sort({ createdAt: -1 }).lean();
       
       const formattedClients = clients.map(client => ({
@@ -104,7 +113,7 @@ export async function POST(request) {
 
     if (action === 'update') {
       const { rowIndex, oldSheet, ...updateData } = body;
-      await Client.findByIdAndUpdate(rowIndex, { $set: updateData }, { new: true });
+      await Client.findByIdAndUpdate(rowIndex, { $set: updateData }, { returnDocument: 'after' });
       invalidateCache();
       return NextResponse.json({ status: 'success' });
     }
@@ -140,10 +149,10 @@ export async function POST(request) {
       return NextResponse.json({ status: 'success' });
     }
 
-    if (action === 'importData') {
-      // In the new architecture, the KAM import can be handled here or replaced entirely
-      // by the 12 AM auto-sync. We'll return success to avoid frontend errors.
-      return NextResponse.json({ status: 'success', updated: 0, added: 0, skipped: 0 });
+    if (action === 'importData' || action === 'syncSheets') {
+      const syncResult = await syncGoogleSheetsToMongo();
+      invalidateCache();
+      return NextResponse.json({ status: 'success', ...syncResult });
     }
 
     if (action === 'importCSV') {
