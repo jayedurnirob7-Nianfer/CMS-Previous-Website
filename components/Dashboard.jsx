@@ -423,29 +423,45 @@ const ALL_DEFAULT_PROFILES = [
 
 
   const handleAddData = async (newData) => {
-    const payload = editingItem 
+    const isEdit = !!editingItem;
+    const itemData = {
+      ...newData,
+      category: newData.sheet || newData.category || 'Wordpress',
+      rowIndex: editingItem ? editingItem.rowIndex : (newData._id || Date.now().toString())
+    };
+
+    // 1. Instant 0ms optimistic UI update
+    setAllData(prev => {
+      if (isEdit) {
+        return prev.map(item => (item.rowIndex === editingItem.rowIndex || item._id === editingItem._id) ? { ...item, ...itemData } : item);
+      } else {
+        return [{ ...itemData, _id: Date.now().toString(), createdAt: new Date().toISOString() }, ...prev];
+      }
+    });
+
+    // 2. Close modal instantly
+    setIsModalOpen(false);
+    setEditingItem(null);
+
+    // 3. Persist to MongoDB in background
+    const payload = isEdit 
       ? { ...newData, action: 'update', rowIndex: editingItem.rowIndex, oldSheet: editingItem.category }
       : { ...newData, action: 'create', sheet: newData.sheet || activeTab };
 
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const result = await response.json();
       if (result.status === 'success') {
-        await fetchAllData(false, true); // Force fresh fetch from server
-        setIsModalOpen(false);
-        setEditingItem(null);
+        fetchAllData(true, false); // Silent background sync
       } else {
-        alert("Error saving data: " + result.error);
+        console.error("Error saving data:", result.error);
       }
     } catch (error) {
       console.error("Error saving data:", error);
-      alert(`Failed to save data. Error: ${error.message}`);
     }
   };
 
@@ -1214,7 +1230,6 @@ const ALL_DEFAULT_PROFILES = [
                         const isOrderDone = (item['Deadline Status'] || '').toLowerCase().includes('order done');
                         const needsWebsite = isOrderDone && !item['Client Website'];
                         const validUrl = item['Client Website'] || item['Our Domain'];
-                        const previewUrl = getPreviewUrl(validUrl);
                         
                         return (
                           <div key={i} className={`${styles.websiteStackItem} ${needsWebsite ? styles.flashingWarning : ''}`}>
@@ -1224,6 +1239,13 @@ const ALL_DEFAULT_PROFILES = [
                                 ourDomain={item['Our Domain']} 
                                 onLivePreview={(url) => setPreviewUrlModal(url)} 
                               />
+                              <button 
+                                className={styles.floatingEditButton} 
+                                onClick={(e) => { e.stopPropagation(); openEditModal(item); }} 
+                                title="Edit Entry"
+                              >
+                                <EditIcon /> <span>Edit</span>
+                              </button>
                             </div>
                             <div className={styles.stackItemHeader}>
                               <div className={styles.stackItemInfo}>
@@ -1247,9 +1269,6 @@ const ALL_DEFAULT_PROFILES = [
                                 )}
                               </div>
                               <div className={styles.stackActions}>
-                                <button className={styles.editButton} onClick={(e) => { e.stopPropagation(); openEditModal(item); }} title="Edit Entry">
-                                  <EditIcon />
-                                </button>
                                 {isAdmin && (
                                   <button className={styles.deleteButton} onClick={(e) => { e.stopPropagation(); handleDelete(item); }} title="Delete Entry">
                                     🗑️
