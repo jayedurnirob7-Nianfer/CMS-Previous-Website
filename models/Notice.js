@@ -17,7 +17,7 @@ const NoticeSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['All', 'Wordpress', 'WIX', 'Shopify', 'Global'],
+    enum: ['All', 'Wordpress', 'WIX', 'Shopify', 'Document', 'Global'],
     default: 'Global',
   },
   isPinned: {

@@ -97,6 +97,7 @@ export default function Modal({
               <option value="Wordpress">Wordpress</option>
               <option value="WIX">WIX</option>
               <option value="Shopify">Shopify</option>
+              <option value="Document">Document</option>
             </select>
           </div>
 

@@ -927,7 +927,7 @@ const ALL_DEFAULT_PROFILES = [
 
   const tabCounts = useMemo(() => {
     const sourceData = applyStatusFilter(allData);
-    const counts = { All: sourceData.length, Wordpress: 0, WIX: 0, Shopify: 0 };
+    const counts = { All: sourceData.length, Wordpress: 0, WIX: 0, Shopify: 0, Document: 0 };
     sourceData.forEach(item => {
       if (item.category && counts[item.category] !== undefined) {
         counts[item.category]++;
@@ -1047,7 +1047,8 @@ const ALL_DEFAULT_PROFILES = [
                     { id: 'All', label: 'All', icon: '🌐' },
                     { id: 'Wordpress', label: 'WordPress', icon: '🅏' },
                     { id: 'WIX', label: 'WIX', icon: '⬢' },
-                    { id: 'Shopify', label: 'Shopify', icon: '🛍️' }
+                    { id: 'Shopify', label: 'Shopify', icon: '🛍️' },
+                    { id: 'Document', label: 'Document', icon: '📄' }
                   ].map(tab => (
                     <button 
                       key={tab.id} 
@@ -1076,7 +1077,9 @@ const ALL_DEFAULT_PROFILES = [
                 <option value="missing_client_name">👤 No Client name</option>
                 {isAdmin && <option value="duplicates">⚠️ Show Duplicates</option>}
               </select>
+            </div>
 
+            <div className={styles.panelRow} style={{ marginTop: '0.5rem' }}>
               <div className={styles.searchWrapper}>
                 <span className={styles.searchIconPrefix}>🔍</span>
                 <div className={styles.searchInner}>

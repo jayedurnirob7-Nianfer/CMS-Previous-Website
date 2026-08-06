@@ -58,10 +58,11 @@ export default function NoticeModal({ onClose, onSubmit, initialData, activeTab 
               onChange={(e) => setCategory(e.target.value)}
             >
               <option value="Global">Show on Every Tab (Global)</option>
-              <option value="All">All Tab Only</option>
+              <option value="All">All Tabs (Global)</option>
               <option value="Wordpress">Wordpress</option>
               <option value="WIX">WIX</option>
               <option value="Shopify">Shopify</option>
+              <option value="Document">Document</option>
             </select>
           </div>
 
