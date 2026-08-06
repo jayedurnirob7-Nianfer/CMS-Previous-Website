@@ -13,6 +13,7 @@ import ConfirmModal from './ConfirmModal';
 import CSVImportModal from './CSVImportModal';
 import NoticeBoard from './NoticeBoard';
 import NoticeModal from './NoticeModal';
+import ExportModal from './ExportModal';
 
 const API_URL = '/api/data';
 
@@ -123,6 +124,7 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -774,20 +776,61 @@ const ALL_DEFAULT_PROFILES = [
     let total = filteredDataForStats.length;
     let missingLinks = 0;
     let goodStatus = 0;
+    let badStatus = 0;
+    let notActiveStatus = 0;
 
     filteredDataForStats.forEach(item => {
       if (!item['Client Website'] && !item['Our Domain']) missingLinks++;
       const status = (item['Status'] || '').toLowerCase();
       if (status.includes('good')) goodStatus++;
+      else if (status.includes('bad')) badStatus++;
+      else if (status.includes('not active')) notActiveStatus++;
     });
 
-    return { total, missingLinks, goodStatus };
+    return { total, missingLinks, goodStatus, badStatus, notActiveStatus };
   }, [filteredDataForStats]);
+
+  const statusCounts = useMemo(() => {
+    let sourceData = allData;
+    if (activeTab !== 'All') {
+      sourceData = sourceData.filter(item => item.category === activeTab);
+    }
+    let good = 0;
+    let bad = 0;
+    let notActive = 0;
+    let missingWebsites = 0;
+    let hasWebsite = 0;
+
+    sourceData.forEach(item => {
+      const s = (item['Status'] || '').toLowerCase().trim();
+      if (s.includes('good')) good++;
+      else if (s.includes('bad')) bad++;
+      else if (s.includes('not active')) notActive++;
+
+      const hasClientWebsite = !!item['Client Website'];
+      const hasOurDomain = !!item['Our Domain'];
+      if (!hasClientWebsite && !hasOurDomain) missingWebsites++;
+      if (hasClientWebsite) hasWebsite++;
+    });
+
+    return {
+      all: sourceData.length,
+      good,
+      bad,
+      notActive,
+      missingWebsites,
+      hasWebsite
+    };
+  }, [allData, activeTab]);
 
   const processedData = useMemo(() => {
     let data = filteredDataForStats;
     if (activeStatFilter === 'good') {
       data = data.filter(item => (item['Status'] || '').toLowerCase().includes('good'));
+    } else if (activeStatFilter === 'bad') {
+      data = data.filter(item => (item['Status'] || '').toLowerCase().includes('bad'));
+    } else if (activeStatFilter === 'not_active') {
+      data = data.filter(item => (item['Status'] || '').toLowerCase().includes('not active'));
     } else if (activeStatFilter === 'missing') {
       data = data.filter(item => !item['Client Website'] && !item['Our Domain']);
     }
@@ -976,7 +1019,7 @@ const ALL_DEFAULT_PROFILES = [
             )}
             {isAdmin && (
               <>
-                <button className={styles.exportButton} onClick={handleExportCSV} title="Export 'No Website Included' clients to CSV">
+                <button className={styles.exportButton} onClick={() => setIsExportModalOpen(true)} title="Export clients to CSV with filter options">
                   ⬇️ Export CSV
                 </button>
                 <button 
@@ -1020,23 +1063,38 @@ const ALL_DEFAULT_PROFILES = [
               )}
             </div>
 
-            <div className={styles.panelRow}>
-              <select 
-                className={styles.filterSelect}
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">⚡ All Statuses</option>
-                <option value="good">🟢 Good Status</option>
-                <option value="bad">🔴 Bad Status</option>
-                <option value="not_active">🟡 Not Active</option>
-                <option value="missing_client_name">👤 Client Name Not Found</option>
-                <option value="missing_client">🔗 Client Website Not Found</option>
-                <option value="no_website">🚫 No Website Included</option>
-                <option value="has_client_website">🌐 Client Website Included</option>
-                {isAdmin && <option value="duplicates">⚠️ Show Duplicates</option>}
-              </select>
+            <div className={styles.panelRow} style={{ marginTop: '0.2rem' }}>
+              <div className={styles.segmentTrack} style={{ flexWrap: 'wrap', width: '100%', gap: '0.35rem' }}>
+                {[
+                  { id: 'all', label: 'All Statuses', icon: '⚡' },
+                  { id: 'good', label: 'Good Status', icon: '🟢', count: statusCounts.good },
+                  { id: 'bad', label: 'Bad Status', icon: '🔴', count: statusCounts.bad },
+                  { id: 'not_active', label: 'Not Active', icon: '🟡', count: statusCounts.notActive },
+                  { id: 'no_website', label: 'No Website Listed', icon: '🚫', count: statusCounts.missingWebsites },
+                  { id: 'has_client_website', label: 'Has Client Website', icon: '🌐', count: statusCounts.hasWebsite },
+                  { id: 'missing_client_name', label: 'No Client Name', icon: '👤' }
+                ].map(st => (
+                  <button 
+                    key={st.id} 
+                    className={`${styles.segmentTab} ${filterStatus === st.id ? styles.activeSegmentTab : ''}`}
+                    onClick={() => {
+                      setFilterStatus(st.id);
+                      setActiveStatFilter('total');
+                    }}
+                    style={
+                      st.id === 'good' && filterStatus === 'good' ? { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)' } :
+                      st.id === 'bad' && filterStatus === 'bad' ? { background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)' } :
+                      st.id === 'not_active' && filterStatus === 'not_active' ? { background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)' } : {}
+                    }
+                  >
+                    <span>{st.icon} {st.label}</span>
+                    {st.count !== undefined && <span className={styles.countBadge}>{st.count}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
 
+            <div className={styles.panelRow}>
               <div className={styles.searchWrapper}>
                 <span className={styles.searchIconPrefix}>🔍</span>
                 <div className={styles.searchInner}>
@@ -1135,30 +1193,50 @@ const ALL_DEFAULT_PROFILES = [
             onReorderNotices={handleReorderNotices}
           />
 
-          <div className={styles.statsRow} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+          <div className={styles.statsRow} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             <div 
               className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: activeStatFilter === 'total' ? '2px solid var(--accent)' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: activeStatFilter === 'total' ? 'translateY(-2px)' : 'none', boxShadow: activeStatFilter === 'total' ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none' }}
-              onClick={() => setActiveStatFilter('total')}
+              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: activeStatFilter === 'total' && filterStatus === 'all' ? '2px solid var(--accent)' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: activeStatFilter === 'total' && filterStatus === 'all' ? 'translateY(-2px)' : 'none', boxShadow: activeStatFilter === 'total' && filterStatus === 'all' ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none' }}
+              onClick={() => { setActiveStatFilter('total'); setFilterStatus('all'); }}
             >
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Results</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fff' }}>{stats.total}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.35rem' }}>Total Results</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fff' }}>{stats.total}</div>
             </div>
+
             <div 
               className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: activeStatFilter === 'good' ? '2px solid var(--success)' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: activeStatFilter === 'good' ? 'translateY(-2px)' : 'none', boxShadow: activeStatFilter === 'good' ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none' }}
-              onClick={() => setActiveStatFilter('good')}
+              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'good' || activeStatFilter === 'good' ? '2px solid #10b981' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'good' || activeStatFilter === 'good' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'good' || activeStatFilter === 'good' ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none' }}
+              onClick={() => { setFilterStatus('good'); setActiveStatFilter('total'); }}
             >
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Good Status</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>{stats.goodStatus}</div>
+              <div style={{ color: '#34d399', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🟢 Good Status</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#34d399' }}>{stats.goodStatus}</div>
             </div>
+
             <div 
               className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: activeStatFilter === 'missing' ? '2px solid #fbbf24' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: activeStatFilter === 'missing' ? 'translateY(-2px)' : 'none', boxShadow: activeStatFilter === 'missing' ? '0 4px 12px rgba(251, 191, 36, 0.2)' : 'none' }}
-              onClick={() => setActiveStatFilter('missing')}
+              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'bad' || activeStatFilter === 'bad' ? '2px solid #ef4444' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'bad' || activeStatFilter === 'bad' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'bad' || activeStatFilter === 'bad' ? '0 4px 12px rgba(239, 68, 68, 0.2)' : 'none' }}
+              onClick={() => { setFilterStatus('bad'); setActiveStatFilter('total'); }}
             >
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Missing Websites</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fbbf24' }}>{stats.missingLinks}</div>
+              <div style={{ color: '#f87171', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🔴 Bad Status</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#f87171' }}>{stats.badStatus}</div>
+            </div>
+
+            <div 
+              className={styles.statCard} 
+              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? '2px solid #f59e0b' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none' }}
+              onClick={() => { setFilterStatus('not_active'); setActiveStatFilter('total'); }}
+            >
+              <div style={{ color: '#fbbf24', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🟡 Not Active</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fbbf24' }}>{stats.notActiveStatus}</div>
+            </div>
+
+            <div 
+              className={styles.statCard} 
+              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'no_website' || activeStatFilter === 'missing' ? '2px solid #f97316' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'no_website' || activeStatFilter === 'missing' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'no_website' || activeStatFilter === 'missing' ? '0 4px 12px rgba(249, 115, 22, 0.2)' : 'none' }}
+              onClick={() => { setFilterStatus('no_website'); setActiveStatFilter('total'); }}
+            >
+              <div style={{ color: '#fb923c', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🚫 Missing Websites</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fb923c' }}>{stats.missingLinks}</div>
             </div>
           </div>
 
@@ -1264,6 +1342,7 @@ const ALL_DEFAULT_PROFILES = [
                                 )}
                                 {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
                                   <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
+                                    {(item['Status'].toLowerCase().includes('good') ? '🟢 ' : (item['Status'].toLowerCase().includes('bad') ? '🔴 ' : (item['Status'].toLowerCase().includes('not active') ? '🟡 ' : '')))}
                                     {item['Status']}
                                   </span>
                                 )}
@@ -1484,6 +1563,7 @@ const ALL_DEFAULT_PROFILES = [
                             )}
                             {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
                               <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
+                                {(item['Status'].toLowerCase().includes('good') ? '🟢 ' : (item['Status'].toLowerCase().includes('bad') ? '🔴 ' : (item['Status'].toLowerCase().includes('not active') ? '🟡 ' : '')))}
                                 {item['Status']}
                               </span>
                             )}
@@ -1623,6 +1703,18 @@ const ALL_DEFAULT_PROFILES = [
           onSubmit={handleSaveNotice}
           initialData={editingNotice}
           activeTab={activeTab}
+        />
+      )}
+
+      {isExportModalOpen && (
+        <ExportModal
+          onClose={() => setIsExportModalOpen(false)}
+          allData={allData}
+          baseFilteredData={baseFilteredData}
+          processedData={processedData}
+          activeTab={activeTab}
+          activeSearchTags={activeSearchTags}
+          searchTerm={searchTerm}
         />
       )}
     </div>
