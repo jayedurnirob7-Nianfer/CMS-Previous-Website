@@ -206,6 +206,11 @@ export default function Modal({
           </div>
 
           <div className={styles.formGroup}>
+            <label className={styles.label}>Tags</label>
+            <input type="text" name="Tags" className={styles.input} value={formData['Tags']} onChange={handleChange} placeholder="e.g. E-commerce, Real Estate, Portfolio (comma separated)" />
+          </div>
+
+          <div className={styles.formGroup}>
             <label className={styles.label}>Status</label>
             <select name="Status" className={styles.input} value={formData['Status']} onChange={handleChange}>
               <option value=""></option>

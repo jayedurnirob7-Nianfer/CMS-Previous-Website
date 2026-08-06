@@ -1267,6 +1267,37 @@ const ALL_DEFAULT_PROFILES = [
                                     {item['Status']}
                                   </span>
                                 )}
+                                {item['Tags'] && item['Tags'].trim() && (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem', width: '100%' }}>
+                                    {item['Tags'].split(',').map((t, tagIdx) => {
+                                      const trimmedTag = t.trim();
+                                      if (!trimmedTag) return null;
+                                      return (
+                                        <span 
+                                          key={tagIdx} 
+                                          className={styles.categoryBadge} 
+                                          style={{ 
+                                            backgroundColor: 'rgba(139, 92, 246, 0.15)', 
+                                            color: '#c084fc', 
+                                            borderColor: 'rgba(139, 92, 246, 0.3)',
+                                            cursor: 'pointer',
+                                            fontSize: '0.75rem',
+                                            padding: '0.15rem 0.5rem'
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!activeSearchTags.includes(trimmedTag)) {
+                                              setActiveSearchTags(prev => [...prev, trimmedTag]);
+                                            }
+                                          }}
+                                          title="Click tag to filter"
+                                        >
+                                          🏷️ {trimmedTag}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
                               <div className={styles.stackActions}>
                                 {isAdmin && (
@@ -1469,6 +1500,36 @@ const ALL_DEFAULT_PROFILES = [
                           )}
                           {item['Deli_Last_Time'] && (
                             <div className={styles.panelRow}><strong>Deli Last Time:</strong> {item['Deli_Last_Time']}</div>
+                          )}
+                          {item['Tags'] && item['Tags'].trim() && (
+                            <div className={styles.panelRow} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <strong>Tags:</strong>
+                              {item['Tags'].split(',').map((t, tagIdx) => {
+                                const trimmedTag = t.trim();
+                                if (!trimmedTag) return null;
+                                return (
+                                  <span 
+                                    key={tagIdx} 
+                                    className={styles.categoryBadge} 
+                                    style={{ 
+                                      backgroundColor: 'rgba(139, 92, 246, 0.15)', 
+                                      color: '#c084fc', 
+                                      borderColor: 'rgba(139, 92, 246, 0.3)',
+                                      cursor: 'pointer'
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!activeSearchTags.includes(trimmedTag)) {
+                                        setActiveSearchTags(prev => [...prev, trimmedTag]);
+                                      }
+                                    }}
+                                    title="Click tag to filter"
+                                  >
+                                    🏷️ {trimmedTag}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           )}
                           
                           <div className={styles.panelLinks}>

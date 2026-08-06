@@ -205,6 +205,9 @@ export async function POST(request) {
           if (record['Profile Name'] !== undefined && record['Profile Name'] !== '') {
             updateData['Profile Name'] = record['Profile Name'].trim();
           }
+          if (record['Tags'] !== undefined && record['Tags'] !== '') {
+            updateData['Tags'] = record['Tags'].trim();
+          }
 
           if (Object.keys(updateData).length > 0) {
             await Client.updateMany(
@@ -228,7 +231,8 @@ export async function POST(request) {
             'Client Website': record['Client Website'] || '',
             'Developer': record['Developer'] || '',
             'Status': record['Status'] || 'Good',
-            'Deli_Last_Time': record['Deli_Last_Time'] || ''
+            'Deli_Last_Time': record['Deli_Last_Time'] || '',
+            'Tags': record['Tags'] || ''
           });
           addedCount++;
         }
