@@ -18,7 +18,10 @@ export default function NoticeBoard({
 
   const filteredNotices = useMemo(() => {
     const currentTab = activeTab || 'All';
-    return notices.filter(n => n.category === currentTab || n.category === 'Global');
+    if (currentTab === 'Document') {
+      return notices; // Automatically host all notices & documents from all tabs in Document view!
+    }
+    return notices.filter(n => n.category === currentTab || n.category === 'Global' || n.category === 'All');
   }, [notices, activeTab]);
 
   const handleCopy = (text, key) => {
@@ -30,15 +33,17 @@ export default function NoticeBoard({
     }, 2000);
   };
 
+  const isDragAllowed = isAdmin || activeTab === 'Document';
+
   const handleDragStart = (e, index) => {
-    if (!isAdmin) return;
+    if (!isDragAllowed) return;
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
   };
 
   const handleDragOver = (e, index) => {
-    if (!isAdmin) return;
+    if (!isDragAllowed) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     if (dragOverIndex !== index) {
@@ -47,7 +52,7 @@ export default function NoticeBoard({
   };
 
   const handleDrop = (e, targetIndex) => {
-    if (!isAdmin) return;
+    if (!isDragAllowed) return;
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === targetIndex) {
       setDraggedIndex(null);
@@ -87,6 +92,8 @@ export default function NoticeBoard({
         return styles.badgeShopify;
       case 'Global':
         return styles.badgeGlobal;
+      case 'Document':
+        return styles.badgeDocument;
       default:
         return styles.badgeAll;
     }
@@ -98,7 +105,7 @@ export default function NoticeBoard({
         <div className={styles.headerLeft}>
           <span className={styles.headerIcon}>{activeTab === 'Document' ? '📄' : '📌'}</span>
           <h3 className={styles.title}>
-            {activeTab === 'Document' ? 'Document & Resource Hub' : 'Important Notices & Quick Links'}
+            {activeTab === 'Document' ? 'Document & Resource Hub (All Tabs)' : 'Important Notices & Quick Links'}
           </h3>
         </div>
 
@@ -126,7 +133,7 @@ export default function NoticeBoard({
             return (
               <div
                 key={notice._id}
-                draggable={isAdmin}
+                draggable={isDragAllowed}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDrop={(e) => handleDrop(e, index)}
@@ -135,30 +142,56 @@ export default function NoticeBoard({
               >
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
-                    {isAdmin && (
-                      <span className={styles.dragHandle} title="Click & drag to reorder notice">
+                    {isDragAllowed && (
+                      <span className={styles.dragHandle} title="Click & drag to reorder item">
                         ⠿
                       </span>
                     )}
                     {notice.title}
                   </div>
                   <div className={styles.headerRight}>
-                    <span className={`${styles.categoryBadge} ${getBadgeClass(notice.category)}`}>
-                      {notice.category}
-                    </span>
-                    {isAdmin && (
+                    <div className={styles.tabAssignContainer}>
+                      <span className={styles.tabAssignLabel}>🎯 Tab:</span>
+                      <select
+                        value={notice.category || 'Global'}
+                        onChange={(e) => {
+                          const newCategory = e.target.value;
+                          if (onEditNotice) {
+                            onEditNotice({
+                              id: notice._id,
+                              title: notice.title,
+                              category: newCategory,
+                              content: notice.content,
+                              link: notice.link,
+                              isPinned: notice.isPinned
+                            });
+                          }
+                        }}
+                        className={styles.tabAssignSelect}
+                        title="Change target tab for this notice/document"
+                      >
+                        <option value="Document">📄 Document</option>
+                        <option value="Global">🌐 Global (Every Tab)</option>
+                        <option value="All">⚡ All Tabs</option>
+                        <option value="Wordpress">🅏 WordPress</option>
+                        <option value="WIX">⬢ WIX</option>
+                        <option value="Shopify">🛍️ Shopify</option>
+                      </select>
+                    </div>
+
+                    {(isAdmin || activeTab === 'Document') && (
                       <div className={styles.adminControls}>
                         <button
                           className={styles.iconBtn}
                           onClick={() => onEditNotice(notice)}
-                          title="Edit Notice"
+                          title="Edit Document / Notice"
                         >
                           ✏️ Edit
                         </button>
                         <button
                           className={styles.iconBtn}
                           onClick={() => onDeleteNotice(notice._id)}
-                          title="Delete Notice"
+                          title="Delete Document / Notice"
                           style={{ color: '#f87171' }}
                         >
                           🗑️
