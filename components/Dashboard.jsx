@@ -1061,40 +1061,22 @@ const ALL_DEFAULT_PROFILES = [
                   ))}
                 </div>
               )}
-            </div>
 
-            <div className={styles.panelRow} style={{ marginTop: '0.2rem' }}>
-              <div className={styles.segmentTrack} style={{ flexWrap: 'wrap', width: '100%', gap: '0.35rem' }}>
-                {[
-                  { id: 'all', label: 'All Statuses', icon: '⚡' },
-                  { id: 'good', label: 'Good Status', icon: '🟢', count: statusCounts.good },
-                  { id: 'bad', label: 'Bad Status', icon: '🔴', count: statusCounts.bad },
-                  { id: 'not_active', label: 'Not Active', icon: '🟡', count: statusCounts.notActive },
-                  { id: 'no_website', label: 'No Website Listed', icon: '🚫', count: statusCounts.missingWebsites },
-                  { id: 'has_client_website', label: 'Has Client Website', icon: '🌐', count: statusCounts.hasWebsite },
-                  { id: 'missing_client_name', label: 'No Client Name', icon: '👤' }
-                ].map(st => (
-                  <button 
-                    key={st.id} 
-                    className={`${styles.segmentTab} ${filterStatus === st.id ? styles.activeSegmentTab : ''}`}
-                    onClick={() => {
-                      setFilterStatus(st.id);
-                      setActiveStatFilter('total');
-                    }}
-                    style={
-                      st.id === 'good' && filterStatus === 'good' ? { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)' } :
-                      st.id === 'bad' && filterStatus === 'bad' ? { background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)' } :
-                      st.id === 'not_active' && filterStatus === 'not_active' ? { background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)' } : {}
-                    }
-                  >
-                    <span>{st.icon} {st.label}</span>
-                    {st.count !== undefined && <span className={styles.countBadge}>{st.count}</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
+              <select 
+                className={styles.filterSelect}
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">⚡ All Status</option>
+                <option value="good">🟢 Good ({statusCounts.good})</option>
+                <option value="bad">🔴 Bad ({statusCounts.bad})</option>
+                <option value="not_active">🟡 Not Active ({statusCounts.notActive})</option>
+                <option value="no_website">🚫 No website ({statusCounts.missingWebsites})</option>
+                <option value="has_client_website">🌐 With Website ({statusCounts.hasWebsite})</option>
+                <option value="missing_client_name">👤 No Client name</option>
+                {isAdmin && <option value="duplicates">⚠️ Show Duplicates</option>}
+              </select>
 
-            <div className={styles.panelRow}>
               <div className={styles.searchWrapper}>
                 <span className={styles.searchIconPrefix}>🔍</span>
                 <div className={styles.searchInner}>
