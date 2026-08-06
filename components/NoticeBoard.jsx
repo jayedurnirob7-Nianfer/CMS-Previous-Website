@@ -96,21 +96,25 @@ export default function NoticeBoard({
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.headerIcon}>📌</span>
-          <h3 className={styles.title}>Important Notices & Quick Links</h3>
+          <span className={styles.headerIcon}>{activeTab === 'Document' ? '📄' : '📌'}</span>
+          <h3 className={styles.title}>
+            {activeTab === 'Document' ? 'Document & Resource Hub' : 'Important Notices & Quick Links'}
+          </h3>
         </div>
 
-        {isAdmin && (
+        {(isAdmin || activeTab === 'Document') && (
           <button className={styles.addButton} onClick={onAddNotice}>
-            + Add Notice
+            {activeTab === 'Document' ? '+ Upload Document / Notice' : '+ Add Notice'}
           </button>
         )}
       </div>
 
       <div className={styles.body}>
         {filteredNotices.length === 0 ? (
-          <div style={{ color: '#94a3b8', fontSize: '0.85rem', padding: '0.25rem 0' }}>
-            No active notices or resource links posted yet for {activeTab === 'All' ? 'this dashboard' : activeTab}.
+          <div style={{ color: '#94a3b8', fontSize: '0.9rem', padding: '0.5rem 0', textAlign: activeTab === 'Document' ? 'center' : 'left' }}>
+            {activeTab === 'Document' 
+              ? '📄 No documents or resource links uploaded yet. Click "+ Upload Document / Notice" to post your first document!' 
+              : `No active notices or resource links posted yet for ${activeTab === 'All' ? 'this dashboard' : activeTab}.`}
           </div>
         ) : (
           filteredNotices.map((notice, index) => {

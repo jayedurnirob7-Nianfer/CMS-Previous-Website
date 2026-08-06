@@ -1178,277 +1178,279 @@ const ALL_DEFAULT_PROFILES = [
             onReorderNotices={handleReorderNotices}
           />
 
-          <div className={styles.statsRow} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div 
-              className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: activeStatFilter === 'total' && filterStatus === 'all' ? '2px solid var(--accent)' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: activeStatFilter === 'total' && filterStatus === 'all' ? 'translateY(-2px)' : 'none', boxShadow: activeStatFilter === 'total' && filterStatus === 'all' ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none' }}
-              onClick={() => { setActiveStatFilter('total'); setFilterStatus('all'); }}
-            >
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.35rem' }}>Total Results</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fff' }}>{stats.total}</div>
-            </div>
-
-            <div 
-              className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'good' || activeStatFilter === 'good' ? '2px solid #10b981' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'good' || activeStatFilter === 'good' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'good' || activeStatFilter === 'good' ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none' }}
-              onClick={() => { setFilterStatus('good'); setActiveStatFilter('total'); }}
-            >
-              <div style={{ color: '#34d399', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🟢 Good Status</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#34d399' }}>{stats.goodStatus}</div>
-            </div>
-
-            <div 
-              className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'bad' || activeStatFilter === 'bad' ? '2px solid #ef4444' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'bad' || activeStatFilter === 'bad' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'bad' || activeStatFilter === 'bad' ? '0 4px 12px rgba(239, 68, 68, 0.2)' : 'none' }}
-              onClick={() => { setFilterStatus('bad'); setActiveStatFilter('total'); }}
-            >
-              <div style={{ color: '#f87171', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🔴 Bad Status</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#f87171' }}>{stats.badStatus}</div>
-            </div>
-
-            <div 
-              className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? '2px solid #f59e0b' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none' }}
-              onClick={() => { setFilterStatus('not_active'); setActiveStatFilter('total'); }}
-            >
-              <div style={{ color: '#fbbf24', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🟡 Not Active</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fbbf24' }}>{stats.notActiveStatus}</div>
-            </div>
-
-            <div 
-              className={styles.statCard} 
-              style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'no_website' || activeStatFilter === 'missing' ? '2px solid #f97316' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'no_website' || activeStatFilter === 'missing' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'no_website' || activeStatFilter === 'missing' ? '0 4px 12px rgba(249, 115, 22, 0.2)' : 'none' }}
-              onClick={() => { setFilterStatus('no_website'); setActiveStatFilter('total'); }}
-            >
-              <div style={{ color: '#fb923c', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🚫 Missing Websites</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fb923c' }}>{stats.missingLinks}</div>
-            </div>
-          </div>
-
-          {isAdmin && duplicateWebsitesCount > 0 && (
-            <div style={{ marginBottom: '2rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '1.25rem 1.5rem', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p style={{ color: '#fca5a5', margin: 0, fontWeight: '500', fontSize: '1.1rem' }}>
-                ⚠️ Found <strong style={{ color: '#ef4444' }}>{duplicateWebsitesCount}</strong> duplicate website URL(s) in your database.
-              </p>
-              <button 
-                onClick={() => {
-                  setFilterStatus('duplicates');
-                  setActiveTab('All');
-                  setActiveStatFilter('total');
-                  setSearchTerm('');
-                  setActiveSearchTags([]);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                style={{ padding: '0.75rem 1.5rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
-              >
-                Review & Remove Duplicates
-              </button>
-            </div>
-          )}
-
-          <motion.div layout className={styles.grid}>
-            <AnimatePresence>
-            {groupedData.length === 0 ? (
-              <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={styles.emptyState}>
-                <p>No websites found in {activeTab}.</p>
-              </motion.div>
-            ) : (
-            groupedData.map(([clientName, group], index) => {
-              const isExpanded = expandedCard === clientName;
-              return (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}
-                  key={clientName} 
-                  data-card="true"
-                  className={`${styles.card} ${group.length > 2 ? styles.cardWide3 : (group.length > 1 ? styles.cardWide2 : '')} ${isExpanded ? styles.expandedCard : ''}`}
-                  onClick={() => setExpandedCard(isExpanded ? null : clientName)}
-                  style={{ cursor: isExpanded ? 'default' : 'pointer' }}
+          {activeTab !== 'Document' && (
+            <>
+              <div className={styles.statsRow} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <div 
+                  className={styles.statCard} 
+                  style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: activeStatFilter === 'total' && filterStatus === 'all' ? '2px solid var(--accent)' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: activeStatFilter === 'total' && filterStatus === 'all' ? 'translateY(-2px)' : 'none', boxShadow: activeStatFilter === 'total' && filterStatus === 'all' ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none' }}
+                  onClick={() => { setActiveStatFilter('total'); setFilterStatus('all'); }}
                 >
-                  <div className={`${styles.cardContent} ${isExpanded ? styles.scrollableContent : ''}`}>
-                    <div className={styles.cardHeader}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                        <div className={styles.clientAvatar}>
-                          {clientName ? clientName.charAt(0).toUpperCase() : 'C'}
-                        </div>
-                        <h3 className={styles.clientName}>{clientName}</h3>
-                        <button 
-                          className={styles.copyButton} 
-                          onClick={(e) => { e.stopPropagation(); handleCopyLink(clientName); }}
-                          title="Copy client name"
-                          style={{ padding: '0.25rem', borderRadius: '4px' }}
-                        >
-                          {copiedLink === clientName ? '✓' : <CopyIcon />}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className={`${styles.details} ${group.length > 1 ? styles.detailsGrid : ''}`}
-                      style={group.length > 1 ? { display: 'grid', gridTemplateColumns: `repeat(${Math.min(group.length, 3)}, minmax(0, 1fr))`, gap: '1rem', width: '100%' } : {}}
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.35rem' }}>Total Results</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fff' }}>{stats.total}</div>
+                </div>
+
+                <div 
+                  className={styles.statCard} 
+                  style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'good' || activeStatFilter === 'good' ? '2px solid #10b981' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'good' || activeStatFilter === 'good' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'good' || activeStatFilter === 'good' ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none' }}
+                  onClick={() => { setFilterStatus('good'); setActiveStatFilter('total'); }}
+                >
+                  <div style={{ color: '#34d399', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🟢 Good Status</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#34d399' }}>{stats.goodStatus}</div>
+                </div>
+
+                <div 
+                  className={styles.statCard} 
+                  style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'bad' || activeStatFilter === 'bad' ? '2px solid #ef4444' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'bad' || activeStatFilter === 'bad' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'bad' || activeStatFilter === 'bad' ? '0 4px 12px rgba(239, 68, 68, 0.2)' : 'none' }}
+                  onClick={() => { setFilterStatus('bad'); setActiveStatFilter('total'); }}
+                >
+                  <div style={{ color: '#f87171', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🔴 Bad Status</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#f87171' }}>{stats.badStatus}</div>
+                </div>
+
+                <div 
+                  className={styles.statCard} 
+                  style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? '2px solid #f59e0b' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'not_active' || activeStatFilter === 'not_active' ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none' }}
+                  onClick={() => { setFilterStatus('not_active'); setActiveStatFilter('total'); }}
+                >
+                  <div style={{ color: '#fbbf24', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🟡 Not Active</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fbbf24' }}>{stats.notActiveStatus}</div>
+                </div>
+
+                <div 
+                  className={styles.statCard} 
+                  style={{ background: 'var(--card-bg)', padding: '1.25rem 1.5rem', borderRadius: '12px', border: filterStatus === 'no_website' || activeStatFilter === 'missing' ? '2px solid #f97316' : '1px solid var(--card-border)', backdropFilter: 'blur(12px)', cursor: 'pointer', transition: 'all 0.2s ease', transform: filterStatus === 'no_website' || activeStatFilter === 'missing' ? 'translateY(-2px)' : 'none', boxShadow: filterStatus === 'no_website' || activeStatFilter === 'missing' ? '0 4px 12px rgba(249, 115, 22, 0.2)' : 'none' }}
+                  onClick={() => { setFilterStatus('no_website'); setActiveStatFilter('total'); }}
+                >
+                  <div style={{ color: '#fb923c', fontSize: '0.875rem', marginBottom: '0.35rem', fontWeight: '600' }}>🚫 Missing Websites</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#fb923c' }}>{stats.missingLinks}</div>
+                </div>
+              </div>
+
+              {isAdmin && duplicateWebsitesCount > 0 && (
+                <div style={{ marginBottom: '2rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '1.25rem 1.5rem', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <p style={{ color: '#fca5a5', margin: 0, fontWeight: '500', fontSize: '1.1rem' }}>
+                    ⚠️ Found <strong style={{ color: '#ef4444' }}>{duplicateWebsitesCount}</strong> duplicate website URL(s) in your database.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setFilterStatus('duplicates');
+                      setActiveTab('All');
+                      setActiveStatFilter('total');
+                      setSearchTerm('');
+                      setActiveSearchTags([]);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ padding: '0.75rem 1.5rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+                  >
+                    Review & Remove Duplicates
+                  </button>
+                </div>
+              )}
+
+              <motion.div layout className={styles.grid}>
+                <AnimatePresence>
+                {groupedData.length === 0 ? (
+                  <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={styles.emptyState}>
+                    <p>No websites found in {activeTab}.</p>
+                  </motion.div>
+                ) : (
+                groupedData.map(([clientName, group], index) => {
+                  const isExpanded = expandedCard === clientName;
+                  return (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      key={clientName} 
+                      data-card="true"
+                      className={`${styles.card} ${group.length > 2 ? styles.cardWide3 : (group.length > 1 ? styles.cardWide2 : '')} ${isExpanded ? styles.expandedCard : ''}`}
+                      onClick={() => setExpandedCard(isExpanded ? null : clientName)}
+                      style={{ cursor: isExpanded ? 'default' : 'pointer' }}
                     >
-                      {group.map((item, i) => {
-                        const hasNoWebsite = !item['Client Website'] && !item['Our Domain'];
-                        const isOrderDone = (item['Deadline Status'] || '').toLowerCase().includes('order done');
-                        const needsWebsite = isOrderDone && !item['Client Website'];
-                        const validUrl = item['Client Website'] || item['Our Domain'];
-                        
-                        return (
-                          <div key={i} className={`${styles.websiteStackItem} ${needsWebsite ? styles.flashingWarning : ''}`}>
-                            <div className={styles.internalPreviewContainer}>
-                              <PreviewThumbnail 
-                                clientWebsite={item['Client Website']} 
-                                ourDomain={item['Our Domain']} 
-                                onLivePreview={(url) => setPreviewUrlModal(url)} 
-                              />
-                              <button 
-                                className={styles.floatingEditButton} 
-                                onClick={(e) => { e.stopPropagation(); openEditModal(item); }} 
-                                title="Edit Entry"
-                              >
-                                <EditIcon /> <span>Edit</span>
-                              </button>
+                      <div className={`${styles.cardContent} ${isExpanded ? styles.scrollableContent : ''}`}>
+                        <div className={styles.cardHeader}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <div className={styles.clientAvatar}>
+                              {clientName ? clientName.charAt(0).toUpperCase() : 'C'}
                             </div>
-                            <div className={styles.stackItemHeader}>
-                              <div className={styles.stackItemInfo}>
-                                <span className={styles.categoryBadge}>{item.category}</span>
-                                {item['Type of website'] && item['Type of website'].toLowerCase() !== item.category.toLowerCase() && (
-                                  <span className={styles.type}>{item['Type of website']}</span>
-                                )}
-                                {item['Profile Name'] && (
-                                  <span className={styles.profileBadge}>{item['Profile Name']}</span>
-                                )}
-                                {item['Developer'] && (
-                                  <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.3)' }}>DEV: {item['Developer']}</span>
-                                )}
-                                {item['Deli_Last_Time'] && (
-                                  <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>🕒 {item['Deli_Last_Time']}</span>
-                                )}
-                                {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
-                                  <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
-                                    {(item['Status'].toLowerCase().includes('good') ? '🟢 ' : (item['Status'].toLowerCase().includes('bad') ? '🔴 ' : (item['Status'].toLowerCase().includes('not active') ? '🟡 ' : '')))}
-                                    {item['Status']}
-                                  </span>
-                                )}
-                                {item['Tags'] && item['Tags'].trim() && (
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem', width: '100%' }}>
-                                    {item['Tags'].split(',').map((t, tagIdx) => {
-                                      const trimmedTag = t.trim();
-                                      if (!trimmedTag) return null;
-                                      return (
-                                        <span 
-                                          key={tagIdx} 
-                                          className={styles.categoryBadge} 
-                                          style={{ 
-                                            backgroundColor: 'rgba(139, 92, 246, 0.15)', 
-                                            color: '#c084fc', 
-                                            borderColor: 'rgba(139, 92, 246, 0.3)',
-                                            cursor: 'pointer',
-                                            fontSize: '0.75rem',
-                                            padding: '0.15rem 0.5rem'
-                                          }}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (!activeSearchTags.includes(trimmedTag)) {
-                                              setActiveSearchTags(prev => [...prev, trimmedTag]);
-                                            }
-                                          }}
-                                          title="Click tag to filter"
-                                        >
-                                          🏷️ {trimmedTag}
-                                        </span>
-                                      );
-                                    })}
+                            <h3 className={styles.clientName}>{clientName}</h3>
+                            <button 
+                              className={styles.copyButton} 
+                              onClick={(e) => { e.stopPropagation(); handleCopyLink(clientName); }}
+                              title="Copy client name"
+                              style={{ padding: '0.25rem', borderRadius: '4px' }}
+                            >
+                              {copiedLink === clientName ? '✓' : <CopyIcon />}
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div 
+                          className={`${styles.details} ${group.length > 1 ? styles.detailsGrid : ''}`}
+                          style={group.length > 1 ? { display: 'grid', gridTemplateColumns: `repeat(${Math.min(group.length, 3)}, minmax(0, 1fr))`, gap: '1rem', width: '100%' } : {}}
+                        >
+                          {group.map((item, i) => {
+                            const hasNoWebsite = !item['Client Website'] && !item['Our Domain'];
+                            const isOrderDone = (item['Deadline Status'] || '').toLowerCase().includes('order done');
+                            const needsWebsite = isOrderDone && !item['Client Website'];
+                            const validUrl = item['Client Website'] || item['Our Domain'];
+                            
+                            return (
+                              <div key={i} className={`${styles.websiteStackItem} ${needsWebsite ? styles.flashingWarning : ''}`}>
+                                <div className={styles.internalPreviewContainer}>
+                                  <PreviewThumbnail 
+                                    clientWebsite={item['Client Website']} 
+                                    ourDomain={item['Our Domain']} 
+                                    onLivePreview={(url) => setPreviewUrlModal(url)} 
+                                  />
+                                  <button 
+                                    className={styles.floatingEditButton} 
+                                    onClick={(e) => { e.stopPropagation(); openEditModal(item); }} 
+                                    title="Edit Entry"
+                                  >
+                                    <EditIcon /> <span>Edit</span>
+                                  </button>
+                                </div>
+                                <div className={styles.stackItemHeader}>
+                                  <div className={styles.stackItemInfo}>
+                                    <span className={styles.categoryBadge}>{item.category}</span>
+                                    {item['Type of website'] && item['Type of website'].toLowerCase() !== item.category.toLowerCase() && (
+                                      <span className={styles.type}>{item['Type of website']}</span>
+                                    )}
+                                    {item['Profile Name'] && (
+                                      <span className={styles.profileBadge}>{item['Profile Name']}</span>
+                                    )}
+                                    {item['Developer'] && (
+                                      <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.3)' }}>DEV: {item['Developer']}</span>
+                                    )}
+                                    {item['Deli_Last_Time'] && (
+                                      <span className={styles.categoryBadge} style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>🕒 {item['Deli_Last_Time']}</span>
+                                    )}
+                                    {item['Status'] && !item['Status'].toLowerCase().includes('pxl') && (
+                                      <span className={`${styles.status} ${getStatusClass(item['Status'])}`}>
+                                        {(item['Status'].toLowerCase().includes('good') ? '🟢 ' : (item['Status'].toLowerCase().includes('bad') ? '🔴 ' : (item['Status'].toLowerCase().includes('not active') ? '🟡 ' : '')))}
+                                        {item['Status']}
+                                      </span>
+                                    )}
+                                    {item['Tags'] && item['Tags'].trim() && (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem', width: '100%' }}>
+                                        {item['Tags'].split(',').map((t, tagIdx) => {
+                                          const trimmedTag = t.trim();
+                                          if (!trimmedTag) return null;
+                                          return (
+                                            <span 
+                                              key={tagIdx} 
+                                              className={styles.categoryBadge} 
+                                              style={{ 
+                                                backgroundColor: 'rgba(139, 92, 246, 0.15)', 
+                                                color: '#c084fc', 
+                                                borderColor: 'rgba(139, 92, 246, 0.3)',
+                                                cursor: 'pointer',
+                                                fontSize: '0.75rem',
+                                                padding: '0.15rem 0.5rem'
+                                              }}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!activeSearchTags.includes(trimmedTag)) {
+                                                  setActiveSearchTags(prev => [...prev, trimmedTag]);
+                                                }
+                                              }}
+                                              title="Click tag to filter"
+                                            >
+                                              🏷️ {trimmedTag}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className={styles.stackActions}>
+                                    {isAdmin && (
+                                      <button className={styles.deleteButton} onClick={(e) => { e.stopPropagation(); handleDelete(item); }} title="Delete Entry">
+                                        🗑️
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {!item['Client Name'] && (
+                                  <div className={styles.missingLinkWarning} style={{ marginBottom: '0.5rem' }}>
+                                    ⚠️ CLIENT NAME NOT FOUND
                                   </div>
                                 )}
-                              </div>
-                              <div className={styles.stackActions}>
-                                {isAdmin && (
-                                  <button className={styles.deleteButton} onClick={(e) => { e.stopPropagation(); handleDelete(item); }} title="Delete Entry">
-                                    🗑️
-                                  </button>
+
+                                {hasNoWebsite && needsWebsite ? (
+                                  <div className={styles.noWebsiteAlert} style={{ border: '1px solid rgba(239, 68, 68, 0.4)', animation: 'pulse 2s infinite', display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
+                                    <div>NO WEBSITE INCLUDED</div>
+                                    <div style={{ color: '#f87171', fontWeight: 'bold' }}>🚨 ORDER DONE - INPUT THE WEBSITE</div>
+                                  </div>
+                                ) : hasNoWebsite ? (
+                                  <div className={styles.noWebsiteAlert}>
+                                    NO WEBSITE INCLUDED
+                                  </div>
+                                ) : !item['Client Website'] && (
+                                  <div className={styles.missingLinkWarning}>
+                                    ⚠️ CLIENT WEBSITE NOT FOUND
+                                  </div>
                                 )}
-                              </div>
-                            </div>
 
-                            {!item['Client Name'] && (
-                              <div className={styles.missingLinkWarning} style={{ marginBottom: '0.5rem' }}>
-                                ⚠️ CLIENT NAME NOT FOUND
-                              </div>
-                            )}
-
-                            {hasNoWebsite && needsWebsite ? (
-                              <div className={styles.noWebsiteAlert} style={{ border: '1px solid rgba(239, 68, 68, 0.4)', animation: 'pulse 2s infinite', display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem' }}>
-                                <div>NO WEBSITE INCLUDED</div>
-                                <div style={{ color: '#f87171', fontWeight: 'bold' }}>🚨 ORDER DONE - INPUT THE WEBSITE</div>
-                              </div>
-                            ) : hasNoWebsite ? (
-                              <div className={styles.noWebsiteAlert}>
-                                NO WEBSITE INCLUDED
-                              </div>
-                            ) : !item['Client Website'] && (
-                              <div className={styles.missingLinkWarning}>
-                                ⚠️ CLIENT WEBSITE NOT FOUND
-                              </div>
-                            )}
-
-                            {needsWebsite && !hasNoWebsite && (
-                              <div className={styles.missingLinkWarning} style={{ animation: 'pulse 1s infinite', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.5)', padding: '0.75rem', fontWeight: 'bold', marginTop: '0.5rem' }}>
-                                🚨 ORDER DONE - INPUT THE WEBSITE
-                              </div>
-                            )}
-                            
-                            {item['Client Website'] && (
-                            <div className={`${styles.linkRow} ${styles.primaryLinkRow}`}>
-                              <div className={styles.linkInfo}>
-                                <span className={styles.linkLabel}>Client Website</span>
-                                <a href={item['Client Website']} target="_blank" rel="noreferrer" className={styles.link} onClick={e => e.stopPropagation()}>
-                                  {item['Client Website'].replace(/^https?:\/\//, '')}
-                                </a>
-                              </div>
-                              <button 
-                                className={styles.copyButton} 
-                                onClick={(e) => { e.stopPropagation(); handleCopyLink(item['Client Website']); }}
-                                title="Copy link"
-                              >
-                                {copiedLink === item['Client Website'] ? '✓' : <CopyIcon />}
-                              </button>
+                                {needsWebsite && !hasNoWebsite && (
+                                  <div className={styles.missingLinkWarning} style={{ animation: 'pulse 1s infinite', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.5)', padding: '0.75rem', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                                    🚨 ORDER DONE - INPUT THE WEBSITE
+                                  </div>
+                                )}
+                                
+                                {item['Client Website'] && (
+                                <div className={`${styles.linkRow} ${styles.primaryLinkRow}`}>
+                                  <div className={styles.linkInfo}>
+                                    <span className={styles.linkLabel}>Client Website</span>
+                                    <a href={item['Client Website']} target="_blank" rel="noreferrer" className={styles.link} onClick={e => e.stopPropagation()}>
+                                      {item['Client Website'].replace(/^https?:\/\//, '')}
+                                    </a>
+                                  </div>
+                                  <button 
+                                    className={styles.copyButton} 
+                                    onClick={(e) => { e.stopPropagation(); handleCopyLink(item['Client Website']); }}
+                                    title="Copy link"
+                                  >
+                                    {copiedLink === item['Client Website'] ? '✓' : <CopyIcon />}
+                                  </button>
+                                </div>
+                              )}
+                              
+                              {item['Our Domain'] && (
+                                <div className={styles.linkRow}>
+                                  <div className={styles.linkInfo}>
+                                    <span className={styles.linkLabel}>Our Domain</span>
+                                    <a href={item['Our Domain']} target="_blank" rel="noreferrer" className={styles.link} onClick={e => e.stopPropagation()}>
+                                      {item['Our Domain'].replace(/^https?:\/\//, '')}
+                                    </a>
+                                  </div>
+                                  <button 
+                                    className={styles.copyButton} 
+                                    onClick={(e) => { e.stopPropagation(); handleCopyLink(item['Our Domain']); }}
+                                    title="Copy link"
+                                  >
+                                    {copiedLink === item['Our Domain'] ? '✓' : <CopyIcon />}
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          
-                          {item['Our Domain'] && (
-                            <div className={styles.linkRow}>
-                              <div className={styles.linkInfo}>
-                                <span className={styles.linkLabel}>Our Domain</span>
-                                <a href={item['Our Domain']} target="_blank" rel="noreferrer" className={styles.link} onClick={e => e.stopPropagation()}>
-                                  {item['Our Domain'].replace(/^https?:\/\//, '')}
-                                </a>
-                              </div>
-                              <button 
-                                className={styles.copyButton} 
-                                onClick={(e) => { e.stopPropagation(); handleCopyLink(item['Our Domain']); }}
-                                title="Copy link"
-                              >
-                                {copiedLink === item['Our Domain'] ? '✓' : <CopyIcon />}
-                              </button>
-                            </div>
-                          )}
+                          );
+                        })}
                         </div>
-                      );
-                    })}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+                </AnimatePresence>
+              </motion.div>
+            </>
           )}
-            </AnimatePresence>
-          </motion.div>
         </div>
-      )}
-
-      {isModalOpen && (
+      )}{isModalOpen && (
         <Modal 
           onClose={() => {
             setIsModalOpen(false);

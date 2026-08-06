@@ -6,7 +6,7 @@ import styles from './Modal.module.css';
 export default function NoticeModal({ onClose, onSubmit, initialData, activeTab }) {
   const [title, setTitle] = useState(initialData ? initialData.title || '' : '');
   const [category, setCategory] = useState(
-    initialData ? initialData.category || 'All' : (activeTab && activeTab !== 'All' ? activeTab : 'All')
+    initialData ? initialData.category || 'All' : (activeTab ? activeTab : 'All')
   );
   const [content, setContent] = useState(initialData ? initialData.content || '' : '');
   const [link, setLink] = useState(initialData ? initialData.link || '' : '');
@@ -33,7 +33,9 @@ export default function NoticeModal({ onClose, onSubmit, initialData, activeTab 
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2 className={styles.title}>{initialData ? 'Edit Notice' : 'Add Notice / Resource Link'}</h2>
+          <h2 className={styles.title}>
+            {initialData ? 'Edit Document / Notice' : (activeTab === 'Document' ? '📄 Upload Document / Resource Link' : '📌 Add Notice / Resource Link')}
+          </h2>
           <button className={styles.closeButton} onClick={onClose}>&times;</button>
         </div>
 
