@@ -19,9 +19,10 @@ export default function NoticeBoard({
   const filteredNotices = useMemo(() => {
     const currentTab = activeTab || 'All';
     if (currentTab === 'Document') {
-      return notices; // Automatically host all notices & documents from all tabs in Document view!
+      return notices; // Aggregates all notices & documents across all tabs in Document hub
     }
-    return notices.filter(n => n.category === currentTab || n.category === 'Global' || n.category === 'All');
+    // Strictly show notices designated for the current active tab OR Global notices
+    return notices.filter(n => n.category === currentTab || n.category === 'Global');
   }, [notices, activeTab]);
 
   const handleCopy = (text, key) => {
@@ -170,12 +171,12 @@ export default function NoticeBoard({
                         className={styles.tabAssignSelect}
                         title="Change target tab for this notice/document"
                       >
-                        <option value="Document">📄 Document</option>
                         <option value="Global">🌐 Global (Every Tab)</option>
-                        <option value="All">⚡ All Tabs</option>
-                        <option value="Wordpress">🅏 WordPress</option>
-                        <option value="WIX">⬢ WIX</option>
-                        <option value="Shopify">🛍️ Shopify</option>
+                        <option value="All">⚡ 'All' Tab Only</option>
+                        <option value="Document">📄 Document Hub</option>
+                        <option value="Wordpress">🅏 WordPress Tab Only</option>
+                        <option value="WIX">⬢ WIX Tab Only</option>
+                        <option value="Shopify">🛍️ Shopify Tab Only</option>
                       </select>
                     </div>
 
