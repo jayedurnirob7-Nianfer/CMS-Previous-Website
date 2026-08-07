@@ -176,7 +176,6 @@ export default function NoticeBoard({
                           >
                             <option value="Global">🌐 Global (Every Tab)</option>
                             <option value="All">⚡ 'All' Tab Only</option>
-                            <option value="Document">📄 Document Hub</option>
                             <option value="Wordpress">🅏 WordPress Tab Only</option>
                             <option value="WIX">⬢ WIX Tab Only</option>
                             <option value="Shopify">🛍️ Shopify Tab Only</option>

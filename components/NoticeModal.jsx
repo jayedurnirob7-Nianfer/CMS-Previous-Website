@@ -6,7 +6,7 @@ import styles from './Modal.module.css';
 export default function NoticeModal({ onClose, onSubmit, initialData, activeTab }) {
   const [title, setTitle] = useState(initialData ? initialData.title || '' : '');
   const [category, setCategory] = useState(
-    initialData ? initialData.category || 'All' : (activeTab ? activeTab : 'All')
+    initialData ? initialData.category || 'Global' : (activeTab && activeTab !== 'Document' ? activeTab : 'Global')
   );
   const [content, setContent] = useState(initialData ? initialData.content || '' : '');
   const [link, setLink] = useState(initialData ? initialData.link || '' : '');
@@ -61,7 +61,6 @@ export default function NoticeModal({ onClose, onSubmit, initialData, activeTab 
             >
               <option value="Global">🌐 Global (Show on Every Tab)</option>
               <option value="All">⚡ 'All' Tab Only (Only on 'All' Tab)</option>
-              <option value="Document">📄 Document Hub</option>
               <option value="Wordpress">🅏 WordPress Tab Only</option>
               <option value="WIX">⬢ WIX Tab Only</option>
               <option value="Shopify">🛍️ Shopify Tab Only</option>
