@@ -9,6 +9,7 @@ export default function NoticeBoard({
   isAdmin = false,
   onAddNotice,
   onEditNotice,
+  onSilentAssignTab,
   onDeleteNotice,
   onReorderNotices,
 }) {
@@ -110,9 +111,9 @@ export default function NoticeBoard({
           </h3>
         </div>
 
-        {(isAdmin || activeTab === 'Document') && (
+        {activeTab === 'Document' && (
           <button className={styles.addButton} onClick={onAddNotice}>
-            {activeTab === 'Document' ? '+ Upload Document / Notice' : '+ Add Notice'}
+            + Upload Document / Notice
           </button>
         )}
       </div>
@@ -157,8 +158,8 @@ export default function NoticeBoard({
                         value={notice.category || 'Global'}
                         onChange={(e) => {
                           const newCategory = e.target.value;
-                          if (onEditNotice) {
-                            onEditNotice({
+                          if (onSilentAssignTab) {
+                            onSilentAssignTab({
                               id: notice._id,
                               title: notice.title,
                               category: newCategory,

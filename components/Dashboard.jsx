@@ -248,7 +248,7 @@ const ALL_DEFAULT_PROFILES = [
     }
   };
 
-  const handleSaveNotice = async (noticeData) => {
+  const handleSaveNotice = async (noticeData, keepModalClosed = false) => {
     try {
       const isEdit = !!noticeData.id;
       const method = isEdit ? 'PUT' : 'POST';
@@ -259,8 +259,10 @@ const ALL_DEFAULT_PROFILES = [
       });
       const data = await res.json();
       if (res.ok) {
-        setIsNoticeModalOpen(false);
-        setEditingNotice(null);
+        if (!keepModalClosed) {
+          setIsNoticeModalOpen(false);
+          setEditingNotice(null);
+        }
         fetchNotices();
       } else {
         alert('Failed to save notice: ' + (data.error || 'Server error'));
@@ -1173,6 +1175,9 @@ const ALL_DEFAULT_PROFILES = [
             onEditNotice={(notice) => {
               setEditingNotice(notice);
               setIsNoticeModalOpen(true);
+            }}
+            onSilentAssignTab={(noticeData) => {
+              handleSaveNotice(noticeData, true);
             }}
             onDeleteNotice={handleDeleteNotice}
             onReorderNotices={handleReorderNotices}
