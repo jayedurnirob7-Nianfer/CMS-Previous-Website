@@ -35,7 +35,7 @@ export default function NoticeBoard({
     }, 2000);
   };
 
-  const isDragAllowed = activeTab === 'Document';
+  const isDragAllowed = isAdmin && activeTab === 'Document';
 
   const handleDragStart = (e, index) => {
     if (!isDragAllowed) return;
@@ -111,7 +111,7 @@ export default function NoticeBoard({
           </h3>
         </div>
 
-        {activeTab === 'Document' && (
+        {isAdmin && activeTab === 'Document' && (
           <button className={styles.addButton} onClick={onAddNotice}>
             + Upload Document / Notice
           </button>
@@ -122,7 +122,7 @@ export default function NoticeBoard({
         {filteredNotices.length === 0 ? (
           <div style={{ color: '#94a3b8', fontSize: '0.9rem', padding: '0.5rem 0', textAlign: activeTab === 'Document' ? 'center' : 'left' }}>
             {activeTab === 'Document' 
-              ? '📄 No documents or resource links uploaded yet. Click "+ Upload Document / Notice" to post your first document!' 
+              ? '📄 No documents or resource links uploaded yet.' 
               : `No active notices or resource links posted yet for ${activeTab === 'All' ? 'this dashboard' : activeTab}.`}
           </div>
         ) : (
@@ -152,7 +152,7 @@ export default function NoticeBoard({
                     {notice.title}
                   </div>
                   <div className={styles.headerRight}>
-                    {activeTab === 'Document' ? (
+                    {isAdmin && activeTab === 'Document' ? (
                       <>
                         <div className={styles.tabAssignContainer}>
                           <span className={styles.tabAssignLabel}>🎯 Tab:</span>
