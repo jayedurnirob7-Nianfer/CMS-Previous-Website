@@ -27,18 +27,21 @@
 
 html {
   color-scheme: dark;
+  background-color: #090d16 !important;
 }
 
 body {
-  background-color: var(--bg-color);
-  background-image: var(--bg-gradient);
-  background-attachment: fixed;
-  color: var(--text-color);
+  background-color: #090d16 !important;
+  background-image: var(--bg-gradient) !important;
+  background-attachment: fixed !important;
+  color: var(--text-color) !important;
   font-family: var(--font-family);
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {

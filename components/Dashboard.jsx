@@ -14,6 +14,7 @@ import CSVImportModal from './CSVImportModal';
 import NoticeBoard from './NoticeBoard';
 import NoticeModal from './NoticeModal';
 import ExportModal from './ExportModal';
+import TagModal from './TagModal';
 
 const API_URL = '/api/data';
 
@@ -170,6 +171,8 @@ const ALL_DEFAULT_PROFILES = [
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState(null);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [tagModalItem, setTagModalItem] = useState(null);
 
   const fullProfilesList = useMemo(() => {
     const profileSet = new Set([...ALL_DEFAULT_PROFILES, ...availableProfiles]);
@@ -477,6 +480,48 @@ const ALL_DEFAULT_PROFILES = [
   const openEditModal = (item) => {
     setEditingItem(item);
     setIsModalOpen(true);
+  };
+
+  const openTagModal = (item) => {
+    setTagModalItem(item);
+    setIsTagModalOpen(true);
+  };
+
+  const handleSaveTags = async (item, newTags) => {
+    if (!item) return;
+    
+    // 1. Instant 0ms optimistic UI update
+    setAllData(prev => prev.map(i => 
+      (i.rowIndex === item.rowIndex || i._id === item._id) 
+        ? { ...i, Tags: newTags } 
+        : i
+    ));
+
+    // 2. Background sync to server
+    const payload = {
+      ...item,
+      Tags: newTags,
+      sheet: item.category || 'Wordpress',
+      action: 'update',
+      rowIndex: item.rowIndex,
+      oldSheet: item.category
+    };
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        fetchAllData(true, false);
+      } else {
+        console.error("Error updating tags:", result.error);
+      }
+    } catch (error) {
+      console.error("Error updating tags:", error);
+    }
   };
 
   const handleDelete = (item) => {
@@ -1275,20 +1320,29 @@ const ALL_DEFAULT_PROFILES = [
                     >
                       <div className={`${styles.cardContent} ${isExpanded ? styles.scrollableContent : ''}`}>
                         <div className={styles.cardHeader}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, flex: 1 }}>
                             <div className={styles.clientAvatar}>
                               {clientName ? clientName.charAt(0).toUpperCase() : 'C'}
                             </div>
-                            <h3 className={styles.clientName}>{clientName}</h3>
+                            <h3 className={styles.clientName} title={clientName}>{clientName}</h3>
                             <button 
                               className={styles.copyButton} 
                               onClick={(e) => { e.stopPropagation(); handleCopyLink(clientName); }}
                               title="Copy client name"
-                              style={{ padding: '0.25rem', borderRadius: '4px' }}
+                              style={{ padding: '0.2rem 0.35rem', borderRadius: '4px', flexShrink: 0 }}
                             >
                               {copiedLink === clientName ? '✓' : <CopyIcon />}
                             </button>
                           </div>
+                          {group.length > 0 && (
+                            <button 
+                              className={styles.headerTagButton} 
+                              onClick={(e) => { e.stopPropagation(); openTagModal(group[0]); }} 
+                              title="Add / Edit Tags"
+                            >
+                              🏷️ + Tag
+                            </button>
+                          )}
                         </div>
                         
                         <div 
@@ -1338,39 +1392,17 @@ const ALL_DEFAULT_PROFILES = [
                                         {item['Status']}
                                       </span>
                                     )}
-                                    {item['Tags'] && item['Tags'].trim() && (
-                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem', width: '100%' }}>
-                                        {item['Tags'].split(',').map((t, tagIdx) => {
-                                          const trimmedTag = t.trim();
-                                          if (!trimmedTag) return null;
-                                          return (
-                                            <span 
-                                              key={tagIdx} 
-                                              className={styles.categoryBadge} 
-                                              style={{ 
-                                                backgroundColor: 'rgba(139, 92, 246, 0.15)', 
-                                                color: '#c084fc', 
-                                                borderColor: 'rgba(139, 92, 246, 0.3)',
-                                                cursor: 'pointer',
-                                                fontSize: '0.75rem',
-                                                padding: '0.15rem 0.5rem'
-                                              }}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (!activeSearchTags.includes(trimmedTag)) {
-                                                  setActiveSearchTags(prev => [...prev, trimmedTag]);
-                                                }
-                                              }}
-                                              title="Click tag to filter"
-                                            >
-                                              🏷️ {trimmedTag}
-                                            </span>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
                                   </div>
                                   <div className={styles.stackActions}>
+                                    {group.length > 1 && (
+                                      <button 
+                                        className={styles.editButton} 
+                                        onClick={(e) => { e.stopPropagation(); openEditModal(item); }} 
+                                        title="Edit Entry"
+                                      >
+                                        <EditIcon />
+                                      </button>
+                                    )}
                                     {isAdmin && (
                                       <button className={styles.deleteButton} onClick={(e) => { e.stopPropagation(); handleDelete(item); }} title="Delete Entry">
                                         🗑️
@@ -1439,6 +1471,30 @@ const ALL_DEFAULT_PROFILES = [
                                   >
                                     {copiedLink === item['Our Domain'] ? '✓' : <CopyIcon />}
                                   </button>
+                                </div>
+                              )}
+
+                              {item['Tags'] && item['Tags'].trim() && (
+                                <div className={styles.itemTagsSection}>
+                                  {item['Tags'].split(',').map((t, tagIdx) => {
+                                    const trimmedTag = t.trim();
+                                    if (!trimmedTag) return null;
+                                    return (
+                                      <span 
+                                        key={tagIdx} 
+                                        className={styles.tagPill} 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!activeSearchTags.includes(trimmedTag)) {
+                                            setActiveSearchTags(prev => [...prev, trimmedTag]);
+                                          }
+                                        }}
+                                        title="Click tag to filter"
+                                      >
+                                        {trimmedTag}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -1707,6 +1763,15 @@ const ALL_DEFAULT_PROFILES = [
           activeTab={activeTab}
           activeSearchTags={activeSearchTags}
           searchTerm={searchTerm}
+        />
+      )}
+
+      {isTagModalOpen && tagModalItem && (
+        <TagModal 
+          item={tagModalItem}
+          clientName={tagModalItem['Client Name']}
+          onClose={() => { setIsTagModalOpen(false); setTagModalItem(null); }}
+          onSaveTags={handleSaveTags}
         />
       )}
     </div>
