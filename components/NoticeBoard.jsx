@@ -35,7 +35,7 @@ export default function NoticeBoard({
     }, 2000);
   };
 
-  const isDragAllowed = isAdmin || activeTab === 'Document';
+  const isDragAllowed = activeTab === 'Document';
 
   const handleDragStart = (e, index) => {
     if (!isDragAllowed) return;
@@ -152,53 +152,59 @@ export default function NoticeBoard({
                     {notice.title}
                   </div>
                   <div className={styles.headerRight}>
-                    <div className={styles.tabAssignContainer}>
-                      <span className={styles.tabAssignLabel}>🎯 Tab:</span>
-                      <select
-                        value={notice.category || 'Global'}
-                        onChange={(e) => {
-                          const newCategory = e.target.value;
-                          if (onSilentAssignTab) {
-                            onSilentAssignTab({
-                              id: notice._id,
-                              title: notice.title,
-                              category: newCategory,
-                              content: notice.content,
-                              link: notice.link,
-                              isPinned: notice.isPinned
-                            });
-                          }
-                        }}
-                        className={styles.tabAssignSelect}
-                        title="Change target tab for this notice/document"
-                      >
-                        <option value="Global">🌐 Global (Every Tab)</option>
-                        <option value="All">⚡ 'All' Tab Only</option>
-                        <option value="Document">📄 Document Hub</option>
-                        <option value="Wordpress">🅏 WordPress Tab Only</option>
-                        <option value="WIX">⬢ WIX Tab Only</option>
-                        <option value="Shopify">🛍️ Shopify Tab Only</option>
-                      </select>
-                    </div>
+                    {activeTab === 'Document' ? (
+                      <>
+                        <div className={styles.tabAssignContainer}>
+                          <span className={styles.tabAssignLabel}>🎯 Tab:</span>
+                          <select
+                            value={notice.category || 'Global'}
+                            onChange={(e) => {
+                              const newCategory = e.target.value;
+                              if (onSilentAssignTab) {
+                                onSilentAssignTab({
+                                  id: notice._id,
+                                  title: notice.title,
+                                  category: newCategory,
+                                  content: notice.content,
+                                  link: notice.link,
+                                  isPinned: notice.isPinned
+                                });
+                              }
+                            }}
+                            className={styles.tabAssignSelect}
+                            title="Change target tab for this notice/document"
+                          >
+                            <option value="Global">🌐 Global (Every Tab)</option>
+                            <option value="All">⚡ 'All' Tab Only</option>
+                            <option value="Document">📄 Document Hub</option>
+                            <option value="Wordpress">🅏 WordPress Tab Only</option>
+                            <option value="WIX">⬢ WIX Tab Only</option>
+                            <option value="Shopify">🛍️ Shopify Tab Only</option>
+                          </select>
+                        </div>
 
-                    {(isAdmin || activeTab === 'Document') && (
-                      <div className={styles.adminControls}>
-                        <button
-                          className={styles.iconBtn}
-                          onClick={() => onEditNotice(notice)}
-                          title="Edit Document / Notice"
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className={styles.iconBtn}
-                          onClick={() => onDeleteNotice(notice._id)}
-                          title="Delete Document / Notice"
-                          style={{ color: '#f87171' }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
+                        <div className={styles.adminControls}>
+                          <button
+                            className={styles.iconBtn}
+                            onClick={() => onEditNotice(notice)}
+                            title="Edit Document / Notice"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            className={styles.iconBtn}
+                            onClick={() => onDeleteNotice(notice._id)}
+                            title="Delete Document / Notice"
+                            style={{ color: '#f87171' }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <span className={`${styles.categoryBadge} ${getBadgeClass(notice.category)}`}>
+                        {notice.category}
+                      </span>
                     )}
                   </div>
                 </div>
