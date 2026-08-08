@@ -13,27 +13,7 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e) => {
-    const val = e.target.value;
-    if (val.includes(',')) {
-      const parts = val.split(',');
-      const currentDraft = parts.pop();
-      const newTagsToAdd = parts.map(t => t.trim()).filter(Boolean);
-      
-      if (newTagsToAdd.length > 0) {
-        setTags(prev => {
-          const updated = [...prev];
-          newTagsToAdd.forEach(t => {
-            if (!updated.includes(t)) {
-              updated.push(t);
-            }
-          });
-          return updated;
-        });
-      }
-      setInputValue(currentDraft);
-    } else {
-      setInputValue(val);
-    }
+    setInputValue(e.target.value);
   };
 
   const handleAddTag = () => {
@@ -164,7 +144,7 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
                 value={inputValue} 
                 onChange={handleInputChange} 
                 onKeyDown={handleKeyDown}
-                placeholder="Type tag name (use comma , to complete tag)..."
+                placeholder="Type tags separated by commas..."
                 autoFocus
               />
               <button 
@@ -187,7 +167,7 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
               </button>
             </div>
             <span style={{ fontSize: '0.725rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
-              Tip: Typing a comma (,) completes the current tag and starts a new one.
+              Tip: Use commas to separate multiple tags, then click + Add.
             </span>
           </div>
 
