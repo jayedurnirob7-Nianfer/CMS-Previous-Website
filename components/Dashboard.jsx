@@ -977,14 +977,14 @@ const ALL_DEFAULT_PROFILES = [
 
   const tabCounts = useMemo(() => {
     const sourceData = applyStatusFilter(allData);
-    const counts = { All: sourceData.length, Wordpress: 0, WIX: 0, Shopify: 0, Document: 0 };
+    const counts = { All: sourceData.length, Wordpress: 0, WIX: 0, Shopify: 0, Document: notices.length };
     sourceData.forEach(item => {
       if (item.category && counts[item.category] !== undefined) {
         counts[item.category]++;
       }
     });
     return counts;
-  }, [allData, filterStatus]);
+  }, [allData, filterStatus, notices]);
 
   const globalSearchCount = useMemo(() => {
     if ((!searchTerm && activeSearchTags.length === 0) || activeTab === 'All') return 0;
@@ -1219,6 +1219,8 @@ const ALL_DEFAULT_PROFILES = [
             notices={notices}
             activeTab={activeTab}
             isAdmin={isAdmin}
+            searchTerm={searchTerm}
+            activeSearchTags={activeSearchTags}
             onAddNotice={() => {
               setEditingNotice(null);
               setIsNoticeModalOpen(true);

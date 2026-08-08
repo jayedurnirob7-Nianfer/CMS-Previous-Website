@@ -7,6 +7,8 @@ export default function NoticeBoard({
   notices = [],
   activeTab = 'All',
   isAdmin = false,
+  searchTerm = '',
+  activeSearchTags = [],
   onAddNotice,
   onEditNotice,
   onSilentAssignTab,
@@ -19,12 +21,37 @@ export default function NoticeBoard({
 
   const filteredNotices = useMemo(() => {
     const currentTab = activeTab || 'All';
-    if (currentTab === 'Document') {
-      return notices; // Aggregates all notices & documents across all tabs in Document hub
+    let list = notices;
+    if (currentTab !== 'Document') {
+      list = notices.filter(n => n.category === currentTab || n.category === 'Global');
     }
-    // Strictly show notices designated for the current active tab OR Global notices
-    return notices.filter(n => n.category === currentTab || n.category === 'Global');
-  }, [notices, activeTab]);
+
+    if (searchTerm.trim() || activeSearchTags.length > 0) {
+      const term = searchTerm.trim().toLowerCase();
+      list = list.filter(n => {
+        const title = (n.title || '').toLowerCase();
+        const content = (n.content || '').toLowerCase();
+        const link = (n.link || '').toLowerCase();
+        const category = (n.category || '').toLowerCase();
+
+        const matchesTags = activeSearchTags.length === 0 || activeSearchTags.some(tag => {
+          const t = tag.toLowerCase();
+          return title.includes(t) || content.includes(t) || category.includes(t);
+        });
+
+        const matchesText = !term || (
+          title.includes(term) || 
+          content.includes(term) || 
+          link.includes(term) || 
+          category.includes(term)
+        );
+
+        return matchesTags && matchesText;
+      });
+    }
+
+    return list;
+  }, [notices, activeTab, searchTerm, activeSearchTags]);
 
   const handleCopy = (text, key) => {
     if (!text) return;
@@ -121,9 +148,11 @@ export default function NoticeBoard({
       <div className={styles.body}>
         {filteredNotices.length === 0 ? (
           <div style={{ color: '#94a3b8', fontSize: '0.9rem', padding: '0.5rem 0', textAlign: activeTab === 'Document' ? 'center' : 'left' }}>
-            {activeTab === 'Document' 
-              ? '📄 No documents or resource links uploaded yet.' 
-              : `No active notices or resource links posted yet for ${activeTab === 'All' ? 'this dashboard' : activeTab}.`}
+            {(searchTerm || activeSearchTags.length > 0)
+              ? `🔍 No documents or resource links found matching your search.`
+              : (activeTab === 'Document' 
+                  ? '📄 No documents or resource links uploaded yet.' 
+                  : `No active notices or resource links posted yet for ${activeTab === 'All' ? 'this dashboard' : activeTab}.`)}
           </div>
         ) : (
           filteredNotices.map((notice, index) => {
