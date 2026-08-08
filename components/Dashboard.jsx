@@ -384,7 +384,10 @@ const ALL_DEFAULT_PROFILES = [
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
+          // Never hide top bar if search is focused
+          if (isSearchFocused) {
+            setShowTopBar(true);
+          } else if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
             setShowTopBar(false);
           } else if (currentScrollY < lastScrollYRef.current) {
             setShowTopBar(true);
@@ -398,7 +401,7 @@ const ALL_DEFAULT_PROFILES = [
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isSearchFocused]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -1151,7 +1154,10 @@ const ALL_DEFAULT_PROFILES = [
                     placeholder={(searchTerm || activeSearchTags.length > 0) ? "Search..." : "Search by client name, domain, or type..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
+                    onFocus={() => {
+                      setIsSearchFocused(true);
+                      setShowTopBar(true);
+                    }}
                     onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                   />
                 </div>
