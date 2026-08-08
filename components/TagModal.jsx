@@ -56,7 +56,6 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAddTag();
     }
   };
 
@@ -112,7 +111,7 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
             }}>
               {tags.length === 0 ? (
                 <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                  No tags added yet. Type below and press comma (,) to add tags.
+                  No tags added yet. Type below and use comma (,) to add tags.
                 </span>
               ) : (
                 tags.map((tag, idx) => (
@@ -188,7 +187,7 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
               </button>
             </div>
             <span style={{ fontSize: '0.725rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
-              Tip: Typing a comma (,) or pressing Enter completes the current tag and starts a new one.
+              Tip: Typing a comma (,) completes the current tag and starts a new one.
             </span>
           </div>
 
