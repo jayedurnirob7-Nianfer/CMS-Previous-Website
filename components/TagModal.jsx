@@ -12,11 +12,34 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    if (val.includes(',')) {
+      const parts = val.split(',');
+      const currentDraft = parts.pop();
+      const newTagsToAdd = parts.map(t => t.trim()).filter(Boolean);
+      
+      if (newTagsToAdd.length > 0) {
+        setTags(prev => {
+          const updated = [...prev];
+          newTagsToAdd.forEach(t => {
+            if (!updated.includes(t)) {
+              updated.push(t);
+            }
+          });
+          return updated;
+        });
+      }
+      setInputValue(currentDraft);
+    } else {
+      setInputValue(val);
+    }
+  };
+
   const handleAddTag = () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
 
-    // Handle comma-separated additions if user pasted multiple
     const newTags = trimmed.split(',').map(t => t.trim()).filter(Boolean);
     const updated = [...tags];
     
@@ -89,7 +112,7 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
             }}>
               {tags.length === 0 ? (
                 <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                  No tags added yet. Type below to add tags.
+                  No tags added yet. Type below and press comma (,) to add tags.
                 </span>
               ) : (
                 tags.map((tag, idx) => (
@@ -140,9 +163,9 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
                 type="text" 
                 className={styles.input} 
                 value={inputValue} 
-                onChange={(e) => setInputValue(e.target.value)} 
+                onChange={handleInputChange} 
                 onKeyDown={handleKeyDown}
-                placeholder="Type tag name (e.g. Shopify, Apparel)..."
+                placeholder="Type tag name (use comma , to complete tag)..."
                 autoFocus
               />
               <button 
@@ -164,8 +187,8 @@ export default function TagModal({ onClose, onSaveTags, item, clientName }) {
                 + Add
               </button>
             </div>
-            <span style={{ fontSize: '0.725rem', color: '#64748b' }}>
-              Tip: Press Enter or use commas to add multiple tags at once.
+            <span style={{ fontSize: '0.725rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
+              Tip: Typing a comma (,) or pressing Enter completes the current tag and starts a new one.
             </span>
           </div>
 
